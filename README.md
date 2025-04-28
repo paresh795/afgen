@@ -1,36 +1,92 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ActionFig Generator (afgen)
+
+This project is a web application built with Next.js, TypeScript, Supabase, Stripe, QStash, and the OpenAI API. It allows users to upload a face photo and generate a customized, high-resolution image of a boxed action figure based on that photo.
+
+## Features
+
+*   User authentication (Supabase Auth)
+*   Face photo upload (Supabase Storage)
+*   Customizable figure details (Name, Tagline, Style, Accessories, etc.)
+*   Image generation via OpenAI Edits API
+*   Background job processing using Upstash QStash
+*   Credit system integrated with Stripe payments
+*   User dashboard to view generated figures and billing history
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+*   Node.js (v18 or later recommended)
+*   pnpm (or npm/yarn)
+*   Supabase account
+*   Stripe account
+*   OpenAI API key
+*   Upstash account (for QStash)
+*   ngrok (for local webhook testing)
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Installation & Setup
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1.  **Clone the repository:**
+    ```bash
+    git clone <repository-url>
+    cd afgen
+    ```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+2.  **Install dependencies:**
+    ```bash
+    pnpm install
+    ```
 
-## Learn More
+3.  **Set up Supabase:**
+    *   Create a new Supabase project.
+    *   In the SQL Editor, run the contents of `src/db/schema.sql` to set up tables, storage, and RLS policies.
+    *   Get your Project URL and Anon Key from Project Settings -> API.
+    *   Get your Service Role Key from Project Settings -> API (keep this secret!).
 
-To learn more about Next.js, take a look at the following resources:
+4.  **Set up Stripe:**
+    *   Create two Products in your Stripe Dashboard (e.g., "Single Credit", "Group Credits").
+    *   Create corresponding Prices for each Product (e.g., $1.99 CAD, $6.99 CAD). Note the Price IDs.
+    *   Get your Publishable Key and Secret Key from Developers -> API Keys.
+    *   Set up a webhook endpoint pointing to `/api/stripe/webhook` (use ngrok for local testing). Get the Webhook Signing Secret.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+5.  **Set up OpenAI:**
+    *   Get your API key from your OpenAI account settings.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+6.  **Set up Upstash QStash:**
+    *   Create a QStash topic or use the direct URL method.
+    *   Get your QStash URL, Token, Current Signing Key, and Next Signing Key from the Upstash console.
 
-## Deploy on Vercel
+7.  **Configure Environment Variables:**
+    *   Copy `.env.example` to `.env.local`.
+    *   Fill in all the required values obtained from the steps above.
+    *   For local development, set `NEXT_PUBLIC_SITE_URL` initially to `http://localhost:3000`.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Running Locally
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1.  **Start the development server:**
+    ```bash
+    pnpm run dev
+    ```
+    The app should be running at `http://localhost:3000`.
+
+2.  **(Optional) Set up ngrok for Webhooks:**
+    *   If testing Stripe webhooks or QStash callbacks locally, start ngrok:
+      ```bash
+      ngrok http 3000
+      ```
+    *   Copy the HTTPS forwarding URL provided by ngrok.
+    *   Update `NEXT_PUBLIC_SITE_URL` in your `.env.local` file with the ngrok HTTPS URL.
+    *   Update your Stripe webhook endpoint URL to use the ngrok URL + `/api/stripe/webhook`.
+    *   **Restart the Next.js dev server** (`pnpm run dev`) after changing the `.env.local` file.
+
+## Deployment
+
+This application is configured for easy deployment on Vercel. Ensure all environment variables are set correctly in your Vercel project settings.
+
+## Contributing
+
+(Add contribution guidelines if applicable)
+
+## License
+
+(Specify license, e.g., MIT)
