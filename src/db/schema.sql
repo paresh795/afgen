@@ -73,7 +73,7 @@ BEGIN
 
   -- Figures table policies
   DROP POLICY IF EXISTS "Users can view their own figures" ON figures;
-  EXECUTE format('CREATE POLICY "Users can view their own figures" ON figures FOR SELECT USING (auth.uid() = user_id)');
+  EXECUTE format('CREATE POLICY "Users can view their own figures" ON figures FOR SELECT USING (auth.role() = ''authenticated'')');
   
   DROP POLICY IF EXISTS "Users can insert their own figures" ON figures;
   EXECUTE format('CREATE POLICY "Users can insert their own figures" ON figures FOR INSERT WITH CHECK (auth.uid() = user_id)');

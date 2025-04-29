@@ -23,7 +23,6 @@ interface Figure {
 export default function DashboardPage() {
   const [figures, setFigures] = useState<Figure[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [activePolls, setActivePolls] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     async function loadFigures() {
@@ -38,15 +37,6 @@ export default function DashboardPage() {
 
         const { figures, count } = await getUserFigures(userData.user.id);
         setFigures(figures);
-        
-        // Start polling for any queued figures
-        const queuedFigures = figures.filter(fig => fig.status === 'queued');
-        if (queuedFigures.length > 0) {
-          console.log(`Found ${queuedFigures.length} queued figures, starting polling`);
-          queuedFigures.forEach(figure => {
-            startPollingFigure(figure.id);
-          });
-        }
       } catch (error) {
         console.error('Error loading figures:', error);
         toast.error('Failed to load your figures');
@@ -59,77 +49,62 @@ export default function DashboardPage() {
     
     // Set up realtime subscription for figure updates
     const figuresSubscription = supabase
-      .channel('figures-changes')
+      .channel('public:figures')
       .on('postgres_changes', { 
-        event: 'UPDATE', 
+        event: '*',
         schema: 'public', 
         table: 'figures' 
       }, (payload) => {
-        // When a figure is updated, refresh our data
-        console.log('Figure updated via realtime:', payload);
-        loadFigures();
+        // SUPER SIMPLE CALLBACK: Just log that *anything* was received
+        console.log('[Realtime] >>> EVENT RECEIVED ON public:figures CHANNEL! <<<', payload);
+        
+        // Restore the actual state update logic
+        // console.log('[Realtime] Callback fired!'); // Keep this commented, the log above is better
+        console.log('[Realtime] Full Payload:', payload); // Keep this for now
+        const updatedFigure = payload.new as Figure; // Cast payload to our Figure type
+        
+        if (updatedFigure) {
+          console.log(`[Realtime] Processing update for figure: ${updatedFigure.id}, Status: ${updatedFigure.status}`);
+          setFigures(prevFigures => {
+            console.log('[Realtime] Current figures state:', prevFigures);
+            const newFigures = prevFigures.map(fig => 
+              fig.id === updatedFigure.id ? updatedFigure : fig
+            );
+            console.log('[Realtime] New figures state (before setting):', newFigures);
+            return newFigures;
+          });
+          
+          // Optional: Show toast notification based on new status
+          // Check old status safely
+          const oldStatus = payload.old && typeof payload.old === 'object' && 'status' in payload.old 
+            ? payload.old.status 
+            : null;
+            
+          if (updatedFigure.status === 'done' && oldStatus === 'queued') {
+            toast.success('Action figure generated!');
+          } else if (updatedFigure.status === 'error' && oldStatus === 'queued') {
+            toast.error(`Figure generation failed: ${updatedFigure.prompt_json?.error || 'Unknown error'}`);
+          }
+        } else {
+          // Fallback to refetch if payload.new is missing (shouldn't happen often)
+          console.log('[Realtime] Payload missing updated figure, refetching all.');
+          loadFigures();
+        }
       })
-      .subscribe();
+      .subscribe((status, err) => {
+        // Add callback to log subscription status
+        if (status === 'SUBSCRIBED') {
+          console.log('[Realtime] Successfully subscribed to figures changes!');
+        } else {
+          console.error(`[Realtime] Subscription failed with status: ${status}`, err);
+        }
+      });
       
     return () => {
       // Clean up subscription when component unmounts
       supabase.removeChannel(figuresSubscription);
     };
   }, []);
-
-  // Function to start polling a specific figure
-  const startPollingFigure = (figureId: string) => {
-    if (activePolls.has(figureId)) {
-      return; // Already polling this figure
-    }
-    
-    console.log(`Starting to poll figure ${figureId}`);
-    
-    // Add to active polls set
-    setActivePolls(prev => new Set(prev).add(figureId));
-    
-    // Start polling
-    pollFigureStatus(figureId, (result) => {
-      // This callback runs on each poll
-      console.log(`Poll update for figure ${figureId}:`, result);
-      
-      if (result.success && result.figure) {
-        // Update the figure in our local state
-        setFigures(prevFigures => 
-          prevFigures.map(fig => 
-            fig.id === figureId 
-              ? { ...fig, status: result.figure.status, image_url: result.figure.image_url } 
-              : fig
-          )
-        );
-        
-        // If status is no longer queued, stop polling
-        if (result.figure.status !== 'queued') {
-          console.log(`Figure ${figureId} is now ${result.figure.status}, stopping polling`);
-          setActivePolls(prev => {
-            const newSet = new Set(prev);
-            newSet.delete(figureId);
-            return newSet;
-          });
-          
-          // Show a toast notification
-          if (result.figure.status === 'done') {
-            toast.success('Your action figure has been generated!');
-          } else if (result.figure.status === 'error') {
-            toast.error(`Figure generation failed: ${result.figure.error || 'Unknown error'}`);
-          }
-        }
-      }
-    }).catch(error => {
-      console.error(`Polling error for figure ${figureId}:`, error);
-      // Stop polling this figure on error
-      setActivePolls(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(figureId);
-        return newSet;
-      });
-    });
-  };
 
   const handleDownload = async (figureId: string, imageUrl: string) => {
     try {
