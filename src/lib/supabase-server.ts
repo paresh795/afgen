@@ -85,7 +85,7 @@ export async function uploadFileAdmin({
  */
 export async function ensureUserCredits(userId: string, defaultCredits: number = 0): Promise<number> {
   try {
-    console.log(`[Admin] Ensuring credits record exists for user ${userId}`);
+    // console.log(`[Admin] Ensuring credits record exists for user ${userId}`);
     
     // First check if user has a credits record
     const { data, error } = await supabaseAdmin
@@ -96,13 +96,13 @@ export async function ensureUserCredits(userId: string, defaultCredits: number =
       
     // If record exists, return the balance
     if (!error && data) {
-      console.log(`[Admin] User has existing credits record with balance: ${data.balance}`);
+      // console.log(`[Admin] User has existing credits record with balance: ${data.balance}`);
       return data.balance;
     }
     
     // If error is that no record exists, create one
     if (error && (error.code === 'PGRST116' || error.message.includes('No rows'))) {
-      console.log(`[Admin] No credits record found for user ${userId}, creating one with ${defaultCredits} credits`);
+      // console.log(`[Admin] No credits record found for user ${userId}, creating one with ${defaultCredits} credits`);
       
       // Create a new credits record
       const { error: upsertError } = await supabaseAdmin
@@ -118,7 +118,7 @@ export async function ensureUserCredits(userId: string, defaultCredits: number =
         return 0;
       }
       
-      console.log(`[Admin] Successfully created credits record with ${defaultCredits} credits`);
+      // console.log(`[Admin] Successfully created credits record with ${defaultCredits} credits`);
       return defaultCredits;
     }
     
@@ -146,7 +146,7 @@ export async function addUserCredits(userId: string, amount: number): Promise<nu
     const currentBalance = await ensureUserCredits(userId, 0);
     const newBalance = currentBalance + amount;
     
-    console.log(`[Admin] Adding ${amount} credits to user ${userId}. ${currentBalance} → ${newBalance}`);
+    // console.log(`[Admin] Adding ${amount} credits to user ${userId}. ${currentBalance} → ${newBalance}`);
     
     // Update the balance
     const { error } = await supabaseAdmin
@@ -162,7 +162,7 @@ export async function addUserCredits(userId: string, amount: number): Promise<nu
       return null;
     }
     
-    console.log(`[Admin] Successfully updated credits to ${newBalance}`);
+    // console.log(`[Admin] Successfully updated credits to ${newBalance}`);
     return newBalance;
   } catch (error) {
     console.error('[Admin] Unexpected error adding credits:', error);

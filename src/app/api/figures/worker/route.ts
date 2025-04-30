@@ -17,12 +17,12 @@ async function verifyAndParse(request: Request): Promise<unknown> {
   }
   
   if (!signature) {
-    console.warn('[QStash] Request received without signature.');
+    // console.warn('[QStash] Request received without signature.');
     // In production, strictly enforce signature presence
     if (process.env.NODE_ENV === 'production') {
       throw new Error('Missing QStash signature');
     } else {
-      console.log('[QStash] Bypassing signature check in non-production environment.');
+      // console.log('[QStash] Bypassing signature check in non-production environment.');
       // Allow bypass only in non-production for easier testing, BUT parse body
       try {
         return JSON.parse(bodyText);
@@ -58,7 +58,7 @@ async function verifyAndParse(request: Request): Promise<unknown> {
     throw new Error('Invalid QStash signature');
   }
 
-  console.log('[QStash] Signature verified successfully.');
+  // console.log('[QStash] Signature verified successfully.');
   // If valid, parse and return the body
   try {
       return JSON.parse(bodyText);
@@ -80,7 +80,7 @@ interface QstashJobPayload {
 }
 
 export async function POST(request: NextRequest) {
-  console.log('[Worker] Received figure generation job');
+  // console.log('[Worker] Received figure generation job');
   
   let figureId: string | null = null; // Keep track of figureId for error handling
   
@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing figure ID' }, { status: 400 });
     }
     
-    console.log(`[Worker] Processing generation for figure ${figureId}`);
+    // console.log(`[Worker] Processing generation for figure ${figureId}`);
     
     // First, check if this figure exists and is still in 'queued' status
     const { data: figure, error: fetchError } = await supabaseAdmin
@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
     }
     
     if (figure.status !== 'queued') {
-      console.log(`[Worker] Figure ${figureId} is already in ${figure.status} status, skipping`);
+      // console.log(`[Worker] Figure ${figureId} is already in ${figure.status} status, skipping`);
       return NextResponse.json({ message: `Figure is already in ${figure.status} status`, figureId });
     }
     
@@ -154,10 +154,10 @@ export async function POST(request: NextRequest) {
     };
     
     // Call the OpenAI API to generate the action figure
-    console.log('[Worker] Calling OpenAI API for figure generation');
+    // console.log('[Worker] Calling OpenAI API for figure generation');
     const generationResult = await generateActionFigure(generationParams);
     
-    console.log('[Worker] OpenAI API generation result:', generationResult);
+    // console.log('[Worker] OpenAI API generation result:', generationResult);
     
     if (!generationResult.success || !generationResult.imageUrl) {
       // Update the figure status to error
@@ -205,7 +205,7 @@ export async function POST(request: NextRequest) {
       }, { status: 500 }); // Or maybe 207 Multi-Status?
     }
     
-    console.log(`[Worker] Figure ${figureId} successfully generated and updated with OpenAI`);
+    // console.log(`[Worker] Figure ${figureId} successfully generated and updated with OpenAI`);
     
     // Return success
     return NextResponse.json({

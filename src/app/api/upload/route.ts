@@ -14,13 +14,11 @@ export async function POST(request: NextRequest) {
     const cookieStore = cookies();
     
     // Debug cookie information
-    const allCookies = cookieStore.getAll();
-    console.log(`Upload API called with ${allCookies.length} cookies:`, 
-      allCookies.map(c => `${c.name}=${c.value.substring(0, 6)}...`));
+    // const allCookies = cookieStore.getAll();
     
     // Check for specific Supabase session cookie
-    const sbSessionCookie = allCookies.find(c => c.name.includes('supabase.auth.token'));
-    console.log('Supabase auth cookie present:', !!sbSessionCookie);
+    // const sbSessionCookie = allCookies.find(c => c.name.includes('supabase.auth.token'));
+    // console.log('Supabase auth cookie present:', !!sbSessionCookie);
     
     // Initialize Supabase client with the cookie store
     const supabase = createRouteHandlerClient({ 
@@ -29,7 +27,7 @@ export async function POST(request: NextRequest) {
     
     // Try to get the user ID either via cookie auth or token auth
     let userId: string | undefined;
-    let userEmail: string | undefined;
+    // let userEmail: string | undefined;
     let formData: FormData;
     
     // First try cookie authentication
@@ -46,8 +44,7 @@ export async function POST(request: NextRequest) {
     if (session) {
       // Cookie auth worked! Use this user ID
       userId = session.user.id;
-      userEmail = session.user.email;
-      console.log("✅ Successfully authenticated via cookies:", userEmail);
+      // userEmail = session.user.email;
       
       // Get the form data for file processing
       formData = await request.formData();
@@ -57,8 +54,6 @@ export async function POST(request: NextRequest) {
       const accessToken = formData.get('access_token');
 
       if (accessToken) {
-        console.log("No session in cookies, trying access_token from form data");
-        
         try {
           // Create a new supabase client with the provided token
           const { data: { user }, error } = await supabase.auth.getUser(accessToken as string);
@@ -70,8 +65,8 @@ export async function POST(request: NextRequest) {
           
           if (user) {
             userId = user.id;
-            userEmail = user.email;
-            console.log("✅ Successfully authenticated via token:", userEmail);
+            // userEmail = user.email;
+            // console.log("✅ Successfully authenticated via token:", userEmail);
           }
         } catch (error) {
           console.error("Failed to authenticate with token:", error);
@@ -80,7 +75,6 @@ export async function POST(request: NextRequest) {
       
       // If we still don't have a user ID, authentication failed
       if (!userId) {
-        console.log("❌ Authentication failed via both cookies and token");
         return NextResponse.json(
           { 
             error: 'Authentication required. Please log in and try again.',
@@ -102,8 +96,6 @@ export async function POST(request: NextRequest) {
         );
       }
     }
-    
-    console.log("Proceeding with file upload for user:", userEmail);
     
     // Get the file from the form data
     const file = formData.get('file') as File;
@@ -137,8 +129,6 @@ export async function POST(request: NextRequest) {
     const timestamp = Date.now();
     const filePath = `${userId}/${timestamp}.${fileExt}`;
     
-    console.log(`Using admin storage client to upload file: ${filePath}`);
-    
     // Use our admin client with service role permissions to bypass RLS
     try {
       const result = await uploadFileAdmin({
@@ -147,8 +137,6 @@ export async function POST(request: NextRequest) {
         file: file,
         userId: userId,
       });
-      
-      console.log('Upload successful via admin client:', result);
       
       return NextResponse.json({ 
         url: result.url,

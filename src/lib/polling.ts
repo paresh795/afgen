@@ -19,6 +19,21 @@ interface PollingOptions<T> {
   onPoll?: (result: T) => void;
 }
 
+// Define the expected structure of the figure status API response
+interface FigureStatusResponse {
+  success: boolean;
+  figure?: {
+    id: string;
+    status: 'queued' | 'done' | 'error';
+    image_url?: string | null;
+    created_at?: string;
+    name?: string;
+    tagline?: string;
+    error?: string | null;
+  };
+  error?: string;
+}
+
 /**
  * Polls a resource until a condition is met or timeout is reached
  */
@@ -69,9 +84,9 @@ export async function poll<T>({
 /**
  * Specialized polling function for checking figure generation status
  */
-export async function pollFigureStatus(figureId: string, onUpdate?: (status: any) => void) {
+export async function pollFigureStatus(figureId: string, onUpdate?: (status: FigureStatusResponse) => void) {
   try {
-    return poll({
+    return poll<FigureStatusResponse>({
       checkFn: async () => {
         const res = await fetch(`/api/figures/status/${figureId}`);
         if (!res.ok) {

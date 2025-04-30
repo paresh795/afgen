@@ -88,7 +88,6 @@ export function FileUploader({
       
       // First check if we have a session
       const { data: { session } } = await supabase.auth.getSession();
-      console.log('Session check in FileUploader:', session ? 'Session found' : 'No session');
       
       if (!session) {
         setError('You need to be logged in to upload files');
@@ -100,27 +99,18 @@ export function FileUploader({
         return undefined;
       }
       
-      console.log('File details:', {
-        name: file.name, 
-        type: file.type, 
-        size: `${(file.size / 1024 / 1024).toFixed(2)}MB`
-      });
-      
       const formData = new FormData();
       formData.append('file', file);
       
       // Add session token as fallback authentication method
       // in case cookies don't work
       if (session.access_token) {
-        console.log('Adding access_token to form data as fallback auth');
         formData.append('access_token', session.access_token);
       }
       
       // Add timeout to fetch
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
-      
-      console.log('Starting upload with user:', session.user.email);
       
       // Use XMLHttpRequest instead of fetch to ensure cookies are sent properly
       return new Promise((resolve, reject) => {
@@ -135,10 +125,8 @@ export function FileUploader({
           if (xhr.status >= 200 && xhr.status < 300) {
             try {
               const response = JSON.parse(xhr.responseText);
-              console.log('Upload response:', response);
               
               if (response.success && response.url) {
-                console.log('Upload successful, auth method:', response.authMethod || 'unknown');
                 toast.success('File uploaded successfully');
                 resolve(response.url);
               } else {
@@ -146,8 +134,8 @@ export function FileUploader({
                 console.error('Upload failed:', errorMsg);
                 reject(new Error(errorMsg));
               }
-            } catch (e) {
-              console.error('Failed to parse server response:', e);
+            } catch (parseError) {
+              console.error('Failed to parse success response:', parseError);
               reject(new Error('Invalid response from server'));
             }
           } else if (xhr.status === 401) {
@@ -172,7 +160,8 @@ export function FileUploader({
                 console.error('Error details:', errorData.details);
               }
               reject(new Error(errorMessage));
-            } catch (e) {
+            } catch (parseError) {
+              console.error('Failed to parse error response:', parseError);
               // Fall back to generic error if parsing fails
               console.error(`Server error (${xhr.status})`, xhr.responseText);
               setError(`Server error (${xhr.status})`);
@@ -197,8 +186,7 @@ export function FileUploader({
         // Log progress
         xhr.upload.onprogress = function(e) {
           if (e.lengthComputable) {
-            const percentComplete = Math.round((e.loaded / e.total) * 100);
-            console.log(`Upload progress: ${percentComplete}%`);
+            // const percentComplete = Math.round((e.loaded / e.total) * 100);
           }
         };
         
@@ -206,7 +194,6 @@ export function FileUploader({
         xhr.withCredentials = true;
         
         // Send the form data
-        console.log('Sending XHR request with credentials');
         xhr.send(formData);
       });
     } catch (error: unknown) {
@@ -272,7 +259,6 @@ export function FileUploader({
     if (selectedFile && uploadToStorage) {
       setError(null);
       toast.loading('Retrying upload...', { id: 'retry-upload' });
-      console.log('Retrying upload for file:', selectedFile.name);
       
       uploadToServer(selectedFile).then(uploadedUrl => {
         toast.dismiss('retry-upload');

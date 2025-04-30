@@ -21,7 +21,7 @@ const PRICE_CREDITS: Record<string, { credits: number; amount: number }> = {
 
 export async function POST(request: NextRequest) {
   // ADD THIS LINE FOR EARLY LOGGING
-  console.log('[Webhook] Received request'); 
+  // console.log('[Webhook] Received request'); 
   
   const body = await request.text();
   const signature = headers().get('stripe-signature') || '';
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
     return new NextResponse(`Webhook Error: ${message}`, { status: 400 });
   }
 
-  console.log(`Received Stripe webhook event: ${event.type}`);
+  // console.log(`Received Stripe webhook event: ${event.type}`);
 
   // Handle the event based on its type
   if (event.type === 'checkout.session.completed') {
@@ -62,24 +62,24 @@ export async function POST(request: NextRequest) {
     
     // Try to get expanded session with line items
     try {
-      console.log(`Retrieving complete session details for ${session.id}`);
+      // console.log(`Retrieving complete session details for ${session.id}`);
       const expandedSession = await stripe.checkout.sessions.retrieve(
         session.id,
         { expand: ['line_items.data.price'] }
       );
       
       // Log what we received
-      console.log(`Session details retrieved:`, {
-        hasLineItems: !!expandedSession.line_items,
-        lineItemsCount: expandedSession.line_items?.data?.length || 0
-      });
+      // console.log(`Session details retrieved:`, {
+      //  hasLineItems: !!expandedSession.line_items,
+      //  lineItemsCount: expandedSession.line_items?.data?.length || 0
+      // });
       
       // Extract the price ID from the first line item
       if (expandedSession.line_items?.data && expandedSession.line_items.data.length > 0) {
         const lineItem = expandedSession.line_items.data[0];
         priceId = lineItem.price?.id || '';
         
-        console.log(`Found price ID in expanded session: ${priceId}`);
+        // console.log(`Found price ID in expanded session: ${priceId}`);
       }
     } catch (error) {
       console.error('Error retrieving expanded session:', error);
@@ -90,41 +90,41 @@ export async function POST(request: NextRequest) {
       // Check if we have a predetermined credit amount for this price ID
       if (priceId in PRICE_CREDITS) {
         creditsToAdd = PRICE_CREDITS[priceId].credits;
-        console.log(`Matched price ID ${priceId} to ${creditsToAdd} credits`);
+        // console.log(`Matched price ID ${priceId} to ${creditsToAdd} credits`);
       } else {
         // Fallback to environment variables if available
-        console.log(`Price ID ${priceId} not in predefined mapping, checking against env vars`);
+        // console.log(`Price ID ${priceId} not in predefined mapping, checking against env vars`);
         
         // Check against environment variables
         if (priceId === process.env.NEXT_PUBLIC_STRIPE_PRICE_SINGLE_ID) {
           creditsToAdd = 1;
-          console.log(`Matched price ID to SINGLE via env var: ${creditsToAdd} credits`);
+          // console.log(`Matched price ID to SINGLE via env var: ${creditsToAdd} credits`);
         } else if (priceId === process.env.NEXT_PUBLIC_STRIPE_PRICE_GROUP_ID) {
           creditsToAdd = 4;
-          console.log(`Matched price ID to GROUP via env var: ${creditsToAdd} credits`);
+          // console.log(`Matched price ID to GROUP via env var: ${creditsToAdd} credits`);
         }
       }
     }
     
     // If we still couldn't determine credits, use a fallback
     if (!creditsToAdd) {
-      console.log(`Could not determine credits from price ID, using fallback logic`);
+      // console.log(`Could not determine credits from price ID, using fallback logic`);
       
       // Fallback to session amount if available
       const amountTotal = session.amount_total;
       if (amountTotal) {
         // If amount is closer to $6.99, it's likely a group plan
         creditsToAdd = amountTotal >= 500 ? 4 : 1;
-        console.log(`Using amount-based fallback, amount: ${amountTotal}, credits: ${creditsToAdd}`);
+        // console.log(`Using amount-based fallback, amount: ${amountTotal}, credits: ${creditsToAdd}`);
       } else {
         // Final fallback: default to 1 credit
         creditsToAdd = 1;
-        console.log(`Using absolute fallback: 1 credit`);
+        // console.log(`Using absolute fallback: 1 credit`);
       }
     }
     
     // Add the credits to the user's account
-    console.log(`Adding ${creditsToAdd} credits to user ${userId} from session ${session.id}`);
+    // console.log(`Adding ${creditsToAdd} credits to user ${userId} from session ${session.id}`);
     await addCreditsToUser(userId, creditsToAdd, session.id);
   }
 
@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
  */
 async function addCreditsToUser(userId: string, creditsToAdd: number, sessionId: string) {
   try {
-    console.log(`[CREDITS] Adding ${creditsToAdd} credits to user ${userId}`);
+    // console.log(`[CREDITS] Adding ${creditsToAdd} credits to user ${userId}`);
     
     // Get current credits
     const { data: creditsData, error: creditsError } = await supabaseAdmin
@@ -176,7 +176,7 @@ async function addCreditsToUser(userId: string, creditsToAdd: number, sessionId:
     const currentBalance = creditsData?.balance || 0;
     const newBalance = currentBalance + creditsToAdd;
     
-    console.log(`[CREDITS] Updating balance from ${currentBalance} to ${newBalance} for user ${userId}`);
+    // console.log(`[CREDITS] Updating balance from ${currentBalance} to ${newBalance} for user ${userId}`);
     
     // Update credits
     const { error: updateError } = await supabaseAdmin
@@ -194,7 +194,7 @@ async function addCreditsToUser(userId: string, creditsToAdd: number, sessionId:
     // Record the payment
     await recordPayment(userId, creditsToAdd, sessionId);
     
-    console.log(`[CREDITS] Successfully added ${creditsToAdd} credits to user ${userId}`);
+    // console.log(`[CREDITS] Successfully added ${creditsToAdd} credits to user ${userId}`);
     
   } catch (error) {
     console.error('[CREDITS] Error adding credits to user:', error);
@@ -223,7 +223,7 @@ async function recordPayment(userId: string, creditsAdded: number, sessionId: st
       console.error(`[PAYMENT] Error recording payment:`, paymentError);
       // Don't throw here - credits were already added
     } else {
-      console.log(`[PAYMENT] Successfully recorded payment for ${creditsAdded} credits`);
+      // console.log(`[PAYMENT] Successfully recorded payment for ${creditsAdded} credits`);
     }
   } catch (error) {
     console.error('[PAYMENT] Error recording payment:', error);

@@ -7,14 +7,14 @@ import { PRICE_IDS } from '@/lib/stripe-config';
 export async function POST(request: NextRequest) {
   try {
     // Debug: Print environment variables and config
-    console.log('ENV VARS:', {
+    /* console.log('ENV VARS:', {
       PRICE_SINGLE: process.env.NEXT_PUBLIC_STRIPE_PRICE_SINGLE_ID,
       PRICE_GROUP: process.env.NEXT_PUBLIC_STRIPE_PRICE_GROUP_ID
     });
     console.log('CONFIG:', {
       PRICE_SINGLE: PRICE_IDS.SINGLE,
       PRICE_GROUP: PRICE_IDS.GROUP
-    });
+    }); */
     
     // Get authentication token from authorization header
     const authHeader = request.headers.get('authorization');
@@ -34,10 +34,10 @@ export async function POST(request: NextRequest) {
         if (user) {
           userId = user.id;
           userEmail = user.email || null;
-          console.log(`Auth success via Bearer token: ${userId}`);
+          // console.log(`Auth success via Bearer token: ${userId}`);
         }
-      } catch (error) {
-        console.log('Token auth error, will try session next');
+      } catch /* (error) */ {
+        // console.log('Token auth error, will try session next');
       }
     }
     
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
       if (session?.user) {
         userId = session.user.id;
         userEmail = session.user.email || null;
-        console.log(`Auth success via cookies: ${userId}`);
+        // console.log(`Auth success via cookies: ${userId}`);
       }
     }
     
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
     const requestData = await request.json();
     const { priceId, successUrl, cancelUrl } = requestData;
     
-    console.log(`Creating checkout for price: ${priceId} for user: ${userId}`);
+    // console.log(`Creating checkout for price: ${priceId} for user: ${userId}`);
     
     // Validate price ID
     if (!priceId) {
@@ -130,7 +130,7 @@ export async function POST(request: NextRequest) {
       },
     });
     
-    console.log(`Checkout session created: ${checkoutSession.id}`);
+    // console.log(`Checkout session created: ${checkoutSession.id}`);
     
     return NextResponse.json({
       id: checkoutSession.id,

@@ -10,15 +10,15 @@ export async function POST(request: NextRequest) {
     const cookieStore = cookies();
     
     // Debug cookie information
-    const allCookies = cookieStore.getAll();
-    console.log(`[Enqueue] API called with ${allCookies.length} cookies`);
+    // const allCookies = cookieStore.getAll();
+    // console.log(`[Enqueue] API called with ${allCookies.length} cookies`);
     
     // Initialize Supabase client with the cookie store
     const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
     
     // Try to get the user ID via cookie auth first
     let userId: string | undefined;
-    let userEmail: string | undefined;
+    // let userEmail: string | undefined;
     
     // First attempt: Try cookie authentication (existing method)
     const { data: { session }/*, error: sessionError */ } = await supabase.auth.getSession();
@@ -26,11 +26,10 @@ export async function POST(request: NextRequest) {
     if (session?.user) {
       // Cookie auth worked! Use this user ID
       userId = session.user.id;
-      userEmail = session.user.email;
-      console.log(`[Enqueue] ✅ Successfully authenticated via cookies: ${userEmail}`);
+      // userEmail = session.user.email;
+      // console.log(`[Enqueue] ✅ Successfully authenticated via cookies: ${userEmail}`);
     } else {
-      console.log('[Enqueue] No session from cookies, trying token authentication');
-      
+      // console.log('[Enqueue] No session from cookies, trying token authentication');
       // Clone request for body parsing (since request body can only be read once)
       const clonedRequest = request.clone();
       
@@ -40,8 +39,6 @@ export async function POST(request: NextRequest) {
         const accessToken = body.access_token;
         
         if (accessToken) {
-          console.log('[Enqueue] Found access_token in request body, verifying');
-          
           // Verify the token with Supabase
           const { data: { user }, error } = await supabase.auth.getUser(accessToken);
           
@@ -49,8 +46,8 @@ export async function POST(request: NextRequest) {
             console.error('[Enqueue] Token auth error:', error);
           } else if (user) {
             userId = user.id;
-            userEmail = user.email;
-            console.log(`[Enqueue] ✅ Successfully authenticated via token: ${userEmail}`);
+            // userEmail = user.email;
+            // console.log(`[Enqueue] ✅ Successfully authenticated via token: ${userEmail}`);
           }
         }
       } catch (error: unknown) {
@@ -60,7 +57,6 @@ export async function POST(request: NextRequest) {
     
     // If we still don't have a user ID, authentication failed
     if (!userId) {
-      console.log('[Enqueue] ❌ Authentication failed via both cookies and token');
       return NextResponse.json({ 
         error: 'Unauthorized. Please sign in and try again.',
         details: 'Authentication required to enqueue figure generation' 
@@ -80,7 +76,6 @@ export async function POST(request: NextRequest) {
     // Ensure user has a credits record and get their balance
     // For new users or users without credits, we initialize with 2 credits for testing
     const credits = await ensureUserCredits(userId, 2);
-    console.log(`[Enqueue] User ${userId} has ${credits} credits after ensuring record exists`);
     
     // Now check if they have enough credits to generate a figure
     if (credits < 1) {
@@ -91,8 +86,6 @@ export async function POST(request: NextRequest) {
       }, { status: 403 });
     }
     
-    console.log(`[Enqueue] User ${userId} has ${credits} credits, proceeding with generation`);
-
     // Create the generation parameters - simplified
     const generationParams = {
       imageUrl,

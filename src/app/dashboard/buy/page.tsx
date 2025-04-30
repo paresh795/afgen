@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -15,11 +15,6 @@ export default function BuyCreditsPage() {
   // State only for purchase loading state
   const [isLoading, setIsLoading] = useState(false); 
   const [loadingPlanId, setLoadingPlanId] = useState<string | null>(null);
-
-  // Effect can be kept if needed for other reasons, or removed if only for debug
-  useEffect(() => {
-    // Example: Could check auth status here if needed
-  }, []);
 
   const handlePurchase = async (planId: string) => {
     setIsLoading(true);

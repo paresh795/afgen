@@ -80,7 +80,6 @@ export default function DashboardLayout({
     
     // Listen for custom refresh credits event
     const handleRefreshCredits = () => {
-      console.log('Manual credit refresh triggered');
       refreshCredits();
     };
     
@@ -96,9 +95,8 @@ export default function DashboardLayout({
     // Function to load user data
     async function loadUserData() {
       try {
-        console.log('[DashboardLayout] Checking auth state before fetching credits...');
-        const { data: authData, error: authError } = await supabase.auth.getUser();
-        console.log('[DashboardLayout] Auth state check result:', { user: authData?.user?.id, email: authData?.user?.email, error: authError });
+        // Just get the user data, we don't need to log it here anymore
+        await supabase.auth.getUser(); 
 
         // Check if we have an active user session
         const { data: { session } } = await supabase.auth.getSession();
@@ -106,14 +104,10 @@ export default function DashboardLayout({
         // Use a grace period before redirecting to handle race conditions
         // where the session might be momentarily missing due to refreshing
         if (!session) {
-          console.log("No session found initially - waiting before redirect");
-          
-          // Set a short timeout to check again before redirecting
           setTimeout(async () => {
             const { data: { session: retrySession } } = await supabase.auth.getSession();
             
             if (!retrySession) {
-              console.log("Still no session found after retry - redirecting to sign in");
               // Only redirect if we're still mounted
               if (true) {
                 window.location.href = `/auth/sign-in?redirectUrl=${window.location.pathname}`;
@@ -136,7 +130,6 @@ export default function DashboardLayout({
         
         // We have a session, load user data
         const user = session.user;
-        console.log(`[DashboardLayout] Session valid, fetching credits for user: ${user.id}`);
         const credits = await getUserCredits(user.id);
         
         setUserData({
