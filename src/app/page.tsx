@@ -128,7 +128,7 @@ export default function Home() {
               <div className="absolute -top-3 right-4 bg-blue-500 text-white px-3 py-1 rounded-full text-sm font-medium">Popular</div>
               <h3 className="text-xl font-poppins font-bold mb-2">Group</h3>
               <p className="text-neutral-600 dark:text-neutral-400 mb-4">Perfect for family or multiple tries</p>
-              <p className="text-4xl font-bold mb-6">$6.99</p>
+              <p className="text-4xl font-bold mb-6">$4.99</p>
               <ul className="space-y-2 mb-8">
                 <li className="flex items-center gap-2">
                   <div className="h-5 w-5 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
@@ -152,7 +152,7 @@ export default function Home() {
                       <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
                     </svg>
                   </div>
-                  <span>Bulk discount (42% off)</span>
+                  <span>Bulk discount (~37% off)</span>
                 </li>
               </ul>
               <Button asChild className="w-full bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700">

@@ -61,21 +61,27 @@ export async function generateActionFigure(params: OpenAiGenerationParams): Prom
     const imageBlob = await imageResponse.blob();
     console.log(`[OpenAI] Input image fetched successfully (${(imageBlob.size / 1024).toFixed(2)} KB)`);
 
-    // == Step 2: Construct the simplified prompt ==
+    // == Step 2: Construct the simplified prompt (with sanitization) ==
+    const safeName = sanitizeForPrompt(params.name, 50);
+    const safeTagline = sanitizeForPrompt(params.tagline, 100);
+    const safeAccessories = params.accessories.map(acc => sanitizeForPrompt(acc, 30)).filter(Boolean);
+
     let promptText =
       `Edit the input image to create a hyper-realistic, 3D, collectible toy action figure. **Crucially, the figure's face and appearance must closely resemble the person in the original uploaded photo, maintaining visual consistency to the greatest extent possible.** ` +
       `The figure should be presented sealed inside professional toy packaging, like a clear plastic blister pack on a backing card. ` +
-      `The packaging must clearly display the name "${params.name}" and the tagline "${params.tagline}". `;
+      `The packaging must clearly display the name "${safeName}" and the tagline "${safeTagline}". `;
 
     // Add accessories if provided
-    if (params.accessories && params.accessories.length > 0) {
-      promptText += `Include miniature representations of the following accessories, visibly displayed in the packaging: ${params.accessories.join(', ')}. `;
+    if (safeAccessories.length > 0) {
+      promptText += `Include miniature representations of the following accessories, visibly displayed in the packaging: ${safeAccessories.join(', ')}. `;
     }
 
     // Add style information if available
     if (params.style) {
       const { styles } = await import('@/lib/config/styles');
-      const styleName = styles.find(s => s.id === params.style)?.name || params.style;
+      // Sanitize style ID before lookup, though it comes from our config so less risky
+      const safeStyleId = sanitizeForPrompt(params.style, 30); 
+      const styleName = styles.find(s => s.id === safeStyleId)?.name || safeStyleId;
       promptText += `The overall style of the figure and packaging should be '${styleName}'. `;
     } else {
       promptText += `Use a default modern action figure style. `;
@@ -192,4 +198,13 @@ export async function generateActionFigure(params: OpenAiGenerationParams): Prom
       error: error instanceof Error ? error.message : 'Unknown error occurred during generation',
     };
   }
+}
+
+// Simple sanitization function
+function sanitizeForPrompt(input: string, maxLength = 100): string {
+  if (!input) return '';
+  // Remove characters that might interfere with prompt structure or markdown
+  const sanitized = input.replace(/[{}[\]`*\\_]/g, '');
+  // Limit length
+  return sanitized.substring(0, maxLength);
 } 

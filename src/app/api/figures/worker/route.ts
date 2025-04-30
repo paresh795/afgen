@@ -2,30 +2,68 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-server';
 import { generateActionFigure, OpenAiGenerationParams } from '@/lib/openai';
 import { headers } from 'next/headers';
+import { Receiver } from '@upstash/qstash';
 
-// QStash signature verification for Next.js App Router
-async function verifyQStashSignature(request: Request) {
+// QStash signature verification wrapper for App Router
+async function verifyAndParse(request: Request): Promise<any> {
   const signature = headers().get('upstash-signature') || '';
-  const body = await request.text();
-  
-  // In a production app, you would use a proper verification here
-  // For now we'll log but continue (development mode convenience)
-  console.log('[QStash] Request signature:', signature.substring(0, 20) + '...');
-  
-  if (!signature && process.env.NODE_ENV === 'production') {
-    throw new Error('Missing QStash signature');
+  const currentSigningKey = process.env.QSTASH_CURRENT_SIGNING_KEY;
+  const nextSigningKey = process.env.QSTASH_NEXT_SIGNING_KEY;
+  const bodyText = await request.text(); // Read body once
+
+  if (!currentSigningKey || !nextSigningKey) {
+    console.error('[QStash] Signing keys are not configured in environment variables.');
+    throw new Error('QStash signing keys not configured');
   }
   
-  // In production, you'd verify with something like:
-  // const isValid = await verifySignature({
-  //   signature,
-  //   body,
-  //   currentSigningKey: process.env.QSTASH_CURRENT_SIGNING_KEY,
-  //   nextSigningKey: process.env.QSTASH_NEXT_SIGNING_KEY,
-  // });
-  
-  // Return the parsed body
-  return JSON.parse(body);
+  if (!signature) {
+    console.warn('[QStash] Request received without signature.');
+    // In production, strictly enforce signature presence
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('Missing QStash signature');
+    } else {
+      console.log('[QStash] Bypassing signature check in non-production environment.');
+      // Allow bypass only in non-production for easier testing, BUT parse body
+      try {
+        return JSON.parse(bodyText);
+      } catch (e) {
+        throw new Error('Invalid JSON body in unsigned request');
+      }
+    }
+  }
+
+  // Use Receiver for verification
+  const receiver = new Receiver({
+    currentSigningKey: currentSigningKey,
+    nextSigningKey: nextSigningKey,
+  });
+
+  let isValid = false;
+  try {
+      // Use receiver.verify which takes signature and body
+      isValid = await receiver.verify({ 
+          signature: signature,
+          body: bodyText, 
+          // url is optional but can add robustness
+          // url: request.url 
+      });
+  } catch (error) {
+      console.error('[QStash] Error during signature verification:', error);
+      throw new Error('Signature verification process failed');
+  }
+
+  if (!isValid) {
+    console.error('[QStash] Invalid signature received.');
+    throw new Error('Invalid QStash signature');
+  }
+
+  console.log('[QStash] Signature verified successfully.');
+  // If valid, parse and return the body
+  try {
+      return JSON.parse(bodyText);
+  } catch (e) {
+      throw new Error('Invalid JSON body after verification');
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -34,10 +72,8 @@ export async function POST(request: NextRequest) {
   let figureId: string | null = null; // Keep track of figureId for error handling
   
   try {
-    // Verify and parse the request body
-    const body = process.env.NODE_ENV === 'development' 
-      ? await request.json() 
-      : await verifyQStashSignature(request.clone());
+    // Verify signature and parse the request body using the helper
+    const body = await verifyAndParse(request.clone()); // Clone request as body can be read only once
     
     // Extract figureId first for potential error handling
     figureId = body.figureId || null;

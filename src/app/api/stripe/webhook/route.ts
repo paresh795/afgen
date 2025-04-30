@@ -211,8 +211,8 @@ async function recordPayment(userId: string, creditsAdded: number, sessionId: st
       .insert({
         user_id: userId,
         stripe_session: sessionId,
-        // Amount based on credits
-        amount_cents: creditsAdded === 1 ? 199 : 699,
+        // Amount based on credits - UPDATED FOR NEW GROUP PRICE
+        amount_cents: creditsAdded === 1 ? 199 : 499,
         credits_added: creditsAdded,
         status: 'completed',
         created_at: new Date().toISOString(),

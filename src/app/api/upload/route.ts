@@ -176,8 +176,13 @@ export async function POST(request: NextRequest) {
     console.error('Upload handler error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     
+    // Return a generic message to the client in production
+    const clientErrorMessage = process.env.NODE_ENV === 'production' 
+      ? 'Server error processing upload' 
+      : `Server error processing upload: ${errorMessage}`; // Be more verbose in dev
+
     return NextResponse.json(
-      { error: 'Server error processing upload', details: errorMessage }, 
+      { error: clientErrorMessage }, 
       { status: 500 }
     );
   }

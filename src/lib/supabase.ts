@@ -116,4 +116,31 @@ export async function getSignedUrl(path: string) {
   }
 
   return data.signedUrl;
+}
+
+// Helper function to get user's payment history
+export async function getUserPayments(userId: string, page = 1, limit = 20) {
+  console.log(`[getUserPayments] Fetching payments for userId: ${userId}, page: ${page}, limit: ${limit}`);
+  const from = (page - 1) * limit;
+  const to = from + limit - 1;
+
+  const { data, error, count } = await supabase
+    .from('payments')
+    .select('*', { count: 'exact' }) // Fetch all columns for now
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .range(from, to);
+
+  console.log('[getUserPayments] Supabase query result:', { data: data ? `${data.length} payments` : null, count, error });
+
+  if (error) {
+    console.error('[getUserPayments] Error fetching user payments:', error);
+    // Return empty array on error, let frontend handle display
+    return { payments: [], count: 0 }; 
+  }
+
+  console.log(`[getUserPayments] Returning ${data?.length || 0} payments, total count: ${count}`);
+  // Map to a slightly friendlier structure if needed, or return raw data
+  // For now, return raw data, frontend can format
+  return { payments: data || [], count };
 } 
