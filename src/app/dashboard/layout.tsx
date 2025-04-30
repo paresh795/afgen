@@ -104,6 +104,10 @@ export default function DashboardLayout({
       try {
         setIsLoading(true);
         
+        console.log('[DashboardLayout] Checking auth state before fetching credits...');
+        const { data: authData, error: authError } = await supabase.auth.getUser();
+        console.log('[DashboardLayout] Auth state check result:', { user: authData?.user?.id, email: authData?.user?.email, error: authError });
+
         // Check if we have an active user session
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
@@ -141,6 +145,7 @@ export default function DashboardLayout({
         
         // We have a session, load user data
         const user = session.user;
+        console.log(`[DashboardLayout] Session valid, fetching credits for user: ${user.id}`);
         const credits = await getUserCredits(user.id);
         
         setUserData({

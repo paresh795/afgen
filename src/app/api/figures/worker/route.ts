@@ -85,13 +85,16 @@ export async function POST(request: NextRequest) {
       // Continue anyway, this is not critical
     }
     
-    // Prepare parameters for the OpenAI function
-    // Ensure userId and figureId are passed for saving the output
+    // Prepare parameters for the OpenAI function - simplified
     const generationParams: OpenAiGenerationParams = {
-      ...(body as Omit<OpenAiGenerationParams, 'userId' | 'figureId'>), // Cast body to expected type, excluding fields we add
+      imageUrl: body.imageUrl,
+      name: body.name,
+      tagline: body.tagline,
+      style: body.style,
+      accessories: body.accessories || [],
+      size: body.size || '1024x1536', // Use the size from the payload, default portrait
       userId: figure.user_id, // Get userId from the figure record
       figureId: figure.id,     // Pass figureId
-      size: body.size || '1024x1024', // Extract size, default to 1024x1024 if missing
     };
     
     // Call the OpenAI API to generate the action figure

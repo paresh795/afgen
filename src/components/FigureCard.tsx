@@ -37,7 +37,7 @@ export function FigureCard({
         <CardDescription className="truncate">{tagline}</CardDescription>
       </CardHeader>
       <CardContent className="p-0">
-        <div className="relative aspect-square overflow-hidden bg-neutral-100/50">
+        <div className="relative aspect-[2/3] overflow-hidden bg-neutral-100/50">
           {status === 'done' && imageUrl ? (
             <Image
               src={imageUrl}

@@ -16,26 +16,17 @@ import { themes } from '@/lib/config/themes';
 import { AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
 import { z } from 'zod';
 
-// Define the form schema using Zod
+// Define the simplified form schema using Zod
 const figureFormSchema = z.object({
   name: z.string().min(1, "Name is required").max(50),
   tagline: z.string().min(1, "Tagline is required").max(100),
   style: z.string().optional(),
-  background: z.string().optional(),
-  theme: z.string().optional(),
   accessories: z.string().optional(), // Store as comma-separated string for input
-  boxColor: z.string().optional(),
-  specialFeatures: z.string().max(200).optional(),
   imageUrl: z.string().url("A valid image URL is required"),
-  size: z.string().default('1024x1024'), // Add size to schema, default to 1:1
+  // Size is now fixed, removed from schema for user input
 });
 
-// Define aspect ratio options - These values MUST match OpenAI supported sizes
-const aspectRatioOptions = [
-  { label: 'Square (1:1)', value: '1024x1024' },
-  { label: 'Portrait (2:3)', value: '1024x1536' },
-  { label: 'Landscape (3:2)', value: '1536x1024' },
-];
+// Removed aspectRatioOptions
 
 // TypeScript type for form values inferred from schema
 type FigureFormValues = z.infer<typeof figureFormSchema>;
@@ -45,14 +36,13 @@ interface EnqueueRequestBody {
   tagline: string;
   imageUrl: string;
   style?: string;
-  background?: string;
-  theme?: string;
   accessories: string[];
-  boxColor?: string;
-  specialFeatures?: string;
-  size?: string; // Add size here
+  size: string; // Still sending fixed size
   access_token?: string; // Optional token for authentication
 }
+
+// Fixed size value
+const FIXED_SIZE = '1024x1536';
 
 export default function GeneratePage() {
   const router = useRouter();
@@ -60,13 +50,9 @@ export default function GeneratePage() {
     name: '',
     tagline: '',
     style: styles[0]?.id || '',
-    background: backgrounds[0]?.id || '',
-    theme: themes[0]?.id || '',
     accessories: '',
-    boxColor: 'blue',
-    specialFeatures: '',
     imageUrl: '',
-    size: aspectRatioOptions[0].value, // Initialize size to default 1:1
+    // size: removed from user-editable state
   });
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false); // Track upload status from FileUploader if needed
@@ -123,20 +109,11 @@ export default function GeneratePage() {
     }
   };
   
-  // Handler for selecting aspect ratio
-  const handleSizeChange = (newSize: string) => {
-    setFormValues(prev => ({ ...prev, size: newSize }));
-    // Clear validation error if any
-    if (errors.some(err => err.path[0] === 'size')) {
-      setErrors(prev => prev.filter(err => err.path[0] !== 'size'));
-    }
-  };
-
   const handleSubmit = async () => {
     setIsEnqueuing(true);
     setErrors([]); // Clear previous errors
 
-    // Validate form using Zod
+    // Validate form using Zod (schema is now simpler)
     const validationResult = figureFormSchema.safeParse(formValues);
 
     if (!validationResult.success) {
@@ -160,13 +137,13 @@ export default function GeneratePage() {
     }
 
     // Prepare data for enqueue endpoint
-    const { accessories, size, ...restOfValues } = validationResult.data;
+    const { accessories, ...restOfValues } = validationResult.data;
     const accessoriesArray = accessories ? accessories.split(',').map(item => item.trim()).filter(Boolean) : [];
     
     const enqueuePayload: EnqueueRequestBody = {
       ...restOfValues,
       accessories: accessoriesArray,
-      size: size, // Include the selected size
+      size: FIXED_SIZE, // Always send the fixed portrait size
     };
 
     try {
@@ -220,10 +197,6 @@ export default function GeneratePage() {
         Upload a face photo and customize your figure details. Requires 1 credit per generation.
       </p>
       
-      <div className="mb-4 p-3 rounded-md border border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 text-sm">
-        Current Credits: {isLoadingCredits ? 'Loading...' : currentCredits ?? 'N/A'}
-      </div>
-
       <Card className="mb-6">
         <CardHeader>
           <CardTitle>1. Upload Face Photo</CardTitle>
@@ -241,7 +214,7 @@ export default function GeneratePage() {
       <Card className="mb-6">
         <CardHeader>
           <CardTitle>2. Customize Your Figure</CardTitle>
-          <CardDescription>Define the name, tagline, style, and other details.</CardDescription>
+          <CardDescription>Define the name, tagline, style, and accessories.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Name Input */}
@@ -271,28 +244,8 @@ export default function GeneratePage() {
             {getErrorForField('tagline') && <p className="text-red-600 text-sm mt-1">{getErrorForField('tagline')}</p>}
           </div>
           
-          {/* Aspect Ratio Selection */}
+          {/* Style Select */}
           <div>
-            <label className="block text-sm font-medium mb-2">Aspect Ratio</label>
-            <div className="flex flex-col sm:flex-row gap-2">
-              {aspectRatioOptions.map(option => (
-                <Button
-                  key={option.value}
-                  variant={formValues.size === option.value ? 'default' : 'outline'}
-                  onClick={() => handleSizeChange(option.value)}
-                  className="flex-1"
-                >
-                  {option.label} 
-                  <span className="text-xs ml-1 text-neutral-500 dark:text-neutral-400">({option.value})</span>
-                </Button>
-              ))}
-            </div>
-            {getErrorForField('size') && <p className="text-red-600 text-sm mt-1">{getErrorForField('size')}</p>}
-          </div>
-          
-          {/* Style & Background Selects */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
               <label htmlFor="style" className="block text-sm font-medium mb-1">Style</label>
               <Select value={formValues.style} onValueChange={(value) => handleChange('style', value)}>
                 <SelectTrigger id="style" className={getErrorForField('style') ? 'border-red-500' : ''}>
@@ -305,52 +258,8 @@ export default function GeneratePage() {
                 </SelectContent>
               </Select>
               {getErrorForField('style') && <p className="text-red-600 text-sm mt-1">{getErrorForField('style')}</p>}
-            </div>
-            <div>
-              <label htmlFor="background" className="block text-sm font-medium mb-1">Background</label>
-              <Select value={formValues.background} onValueChange={(value) => handleChange('background', value)}>
-                <SelectTrigger id="background" className={getErrorForField('background') ? 'border-red-500' : ''}>
-                  <SelectValue placeholder="Select background..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {backgrounds.map(bg => (
-                    <SelectItem key={bg.id} value={bg.id}>{bg.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {getErrorForField('background') && <p className="text-red-600 text-sm mt-1">{getErrorForField('background')}</p>}
-            </div>
           </div>
-          
-          {/* Theme & Box Color */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="theme" className="block text-sm font-medium mb-1">Theme</label>
-              <Select value={formValues.theme} onValueChange={(value) => handleChange('theme', value)}>
-                <SelectTrigger id="theme" className={getErrorForField('theme') ? 'border-red-500' : ''}>
-                  <SelectValue placeholder="Select theme..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {themes.map(theme => (
-                    <SelectItem key={theme.id} value={theme.id}>{theme.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {getErrorForField('theme') && <p className="text-red-600 text-sm mt-1">{getErrorForField('theme')}</p>}
-            </div>
-            <div>
-              <label htmlFor="boxColor" className="block text-sm font-medium mb-1">Box Color</label>
-              <Input
-                id="boxColor"
-                value={formValues.boxColor}
-                onChange={(e) => handleChange('boxColor', e.target.value)}
-                placeholder="e.g., blue, #FF0000"
-                className={getErrorForField('boxColor') ? 'border-red-500' : ''}
-              />
-              {getErrorForField('boxColor') && <p className="text-red-600 text-sm mt-1">{getErrorForField('boxColor')}</p>}
-            </div>
-          </div>
-
+            
           {/* Accessories Input */}
           <div>
             <label htmlFor="accessories" className="block text-sm font-medium mb-1">Accessories (comma-separated)</label>
@@ -362,20 +271,6 @@ export default function GeneratePage() {
               className={getErrorForField('accessories') ? 'border-red-500' : ''}
             />
             {getErrorForField('accessories') && <p className="text-red-600 text-sm mt-1">{getErrorForField('accessories')}</p>}
-          </div>
-          {/* Special Features Textarea */}
-          <div>
-            <label htmlFor="specialFeatures" className="block text-sm font-medium mb-1">Special Features (Optional)</label>
-            <Textarea
-              id="specialFeatures"
-              value={formValues.specialFeatures}
-              onChange={(e) => handleChange('specialFeatures', e.target.value)}
-              placeholder="Describe any unique details, e.g., glowing eyes, battle scars"
-              maxLength={200}
-              rows={2}
-              className={getErrorForField('specialFeatures') ? 'border-red-500' : ''}
-            />
-             {getErrorForField('specialFeatures') && <p className="text-red-600 text-sm mt-1">{getErrorForField('specialFeatures')}</p>}
           </div>
         </CardContent>
       </Card>

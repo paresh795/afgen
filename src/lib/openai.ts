@@ -16,18 +16,14 @@ class OpenAiApiError extends Error {
   }
 }
 
-// Types (adjust based on what we actually need from the form now)
+// Types (Simplified)
 export type OpenAiGenerationParams = {
   imageUrl: string; // Input image URL from Supabase
   name: string;
   tagline: string;
   style?: string;
-  background?: string; // Note: Background might not be directly supported by /edits
-  theme?: string;      // Note: Theme might not be directly supported by /edits
   accessories: string[];
-  boxColor: string; // Note: Box color might not be directly supported by /edits
-  specialFeatures?: string;
-  size?: string; // Add size parameter (e.g., '1024x1024', '1024x1536')
+  size: string; // Size is now mandatory from the backend
   // Needed for saving the output
   userId: string;
   figureId: string;
@@ -65,12 +61,11 @@ export async function generateActionFigure(params: OpenAiGenerationParams): Prom
     const imageBlob = await imageResponse.blob();
     console.log(`[OpenAI] Input image fetched successfully (${(imageBlob.size / 1024).toFixed(2)} KB)`);
 
-    // == Step 2: Construct the detailed prompt ==
-    // Emphasize visual consistency with the input photo.
+    // == Step 2: Construct the simplified prompt ==
     let promptText =
       `Edit the input image to create a hyper-realistic, 3D, collectible toy action figure. **Crucially, the figure's face and appearance must closely resemble the person in the original uploaded photo, maintaining visual consistency to the greatest extent possible.** ` +
       `The figure should be presented sealed inside professional toy packaging, like a clear plastic blister pack on a backing card. ` +
-      `The packaging must clearly display the name "${params.name}" and the tagline "${params.tagline}". `; // Add other text fields like subtitle if needed later
+      `The packaging must clearly display the name "${params.name}" and the tagline "${params.tagline}". `;
 
     // Add accessories if provided
     if (params.accessories && params.accessories.length > 0) {
@@ -86,28 +81,13 @@ export async function generateActionFigure(params: OpenAiGenerationParams): Prom
       promptText += `Use a default modern action figure style. `;
     }
     
-    // Add theme/color information if available
-    if (params.theme) {
-        const { themes } = await import('@/lib/config/themes');
-        const themeName = themes.find(t => t.id === params.theme)?.name || params.theme;
-        promptText += `The color theme should evoke '${themeName}'. `;
-    }
-    if (params.boxColor) {
-        promptText += `The primary color of the packaging card should be ${params.boxColor}. `;
-    }
-
-    // Add special features if provided
-    if (params.specialFeatures) {
-        promptText += `Incorporate these special features: ${params.specialFeatures}. `;
-    }
-
     // Add general quality/aesthetic instructions
     promptText += `Render the entire scene with cinematic photo-realism, studio lighting, soft shadows, 4K detail, and realistic matte plastic textures appropriate for a high-quality collectible toy. `;
     
     // Add composition instruction
     promptText += `**Ensure the entire action figure and its packaging are fully visible and composed neatly within the image frame.**`;
 
-    console.log('📝 New Prompt:', promptText);
+    console.log('📝 Simplified Prompt:', promptText);
 
     // == Step 3: Prepare FormData for the API request ==
     const formData = new FormData();

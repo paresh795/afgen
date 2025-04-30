@@ -70,7 +70,8 @@ export async function POST(request: NextRequest) {
     
     // Parse request body
     const body = await request.json();
-    const { name, tagline, imageUrl, style, background, accessories, boxColor, theme, specialFeatures, size } = body;
+    // Only extract fields we now need + size
+    const { name, tagline, imageUrl, style, accessories, size } = body;
     
     // Validate required fields
     if (!name || !tagline || !imageUrl) {
@@ -93,21 +94,17 @@ export async function POST(request: NextRequest) {
     
     console.log(`[Enqueue] User ${userId} has ${credits} credits, proceeding with generation`);
 
-    // Create the generation parameters
+    // Create the generation parameters - simplified
     const generationParams = {
       imageUrl,
       name,
       tagline,
       style,
-      background,
       accessories: accessories || [],
-      boxColor,
-      theme,
-      specialFeatures,
-      size,
+      size: size || '1024x1536', // Ensure size is always passed, default to portrait
     };
     
-    // Store the prompt in JSON format
+    // Store the prompt in JSON format - simplified
     const promptJson = {
       ...generationParams,
       userId

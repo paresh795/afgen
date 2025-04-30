@@ -20,6 +20,9 @@ const PRICE_CREDITS: Record<string, { credits: number; amount: number }> = {
 };
 
 export async function POST(request: NextRequest) {
+  // ADD THIS LINE FOR EARLY LOGGING
+  console.log('[Webhook] Received request'); 
+  
   const body = await request.text();
   const signature = headers().get('stripe-signature') || '';
 

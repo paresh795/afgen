@@ -28,13 +28,19 @@ export default function DashboardPage() {
     async function loadFigures() {
       try {
         setIsLoading(true);
+
+        console.log('[DashboardPage] Checking auth state before fetching figures...');
+        const { data: authData, error: authError } = await supabase.auth.getUser();
+        console.log('[DashboardPage] Auth state check result:', { user: authData?.user?.id, email: authData?.user?.email, error: authError });
+
         const { data: userData } = await supabase.auth.getUser();
         
         if (!userData?.user?.id) {
-          console.error('User not authenticated');
+          console.error('[DashboardPage] User not authenticated, cannot load figures.');
           return;
         }
 
+        console.log(`[DashboardPage] User authenticated (${userData.user.id}), fetching figures...`);
         const { figures, count } = await getUserFigures(userData.user.id);
         setFigures(figures);
       } catch (error) {
@@ -107,30 +113,74 @@ export default function DashboardPage() {
   }, []);
 
   const handleDownload = async (figureId: string, imageUrl: string) => {
+    console.log(`[Download] Initiated for figure ${figureId}, URL: ${imageUrl}`);
+    toast.loading('Preparing download...', { id: `download-${figureId}` });
+
     try {
-      // For images hosted on external services, we can directly use the URL
-      // For Supabase Storage, we would need to get a signed URL
-      let downloadUrl = imageUrl;
-      
-      // If the image is stored in Supabase Storage, get a signed URL
-      if (imageUrl.includes('supabase')) {
-        const path = imageUrl.split('/').slice(-2).join('/'); // Extract path like "figures/123.png"
-        const signedUrl = await getSignedUrl(path);
-        if (signedUrl) {
-          downloadUrl = signedUrl;
+      let downloadUrl = imageUrl; 
+      let filename = `action-figure-${figureId}.png`; // Default filename
+
+      // Assume if URL contains supabase.co, it's from our storage
+      if (imageUrl.includes('supabase.co')) {
+        console.log('[Download] URL is from Supabase, attempting to get signed URL.');
+        // Extract the path relative to the bucket (e.g., figures/userId/figureId_openai.png)
+        // Find the bucket name ('figures') and get everything after it
+        const bucketName = 'figures';
+        const pathStartIndex = imageUrl.indexOf(`/${bucketName}/`) + `/${bucketName}/`.length;
+        if (pathStartIndex > `/${bucketName}/`.length -1) {
+          const storagePath = imageUrl.substring(pathStartIndex);
+          console.log(`[Download] Extracted storage path: ${storagePath}`);
+          const signedUrl = await getSignedUrl(storagePath);
+          if (signedUrl) {
+            console.log('[Download] Successfully obtained signed URL.');
+            downloadUrl = signedUrl;
+            // Optional: extract original filename if needed, otherwise use default
+            const originalFilename = storagePath.split('/').pop();
+            if (originalFilename) filename = originalFilename;
+          } else {
+            console.warn('[Download] Failed to get signed URL, attempting direct download.');
+            toast.error('Could not generate secure link, trying direct download.', { id: `download-${figureId}` });
+          }
+        } else {
+           console.warn('[Download] Could not extract storage path from URL:', imageUrl);
         }
+      } else {
+        console.log('[Download] URL is not from Supabase, using direct URL.');
       }
 
-      // Create a temporary link and trigger download
+      // --- New Download Logic: Fetch Blob --- 
+      console.log(`[Download] Fetching image data from: ${downloadUrl.substring(0, 100)}...`);
+      const response = await fetch(downloadUrl);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch image data: ${response.statusText}`);
+      }
+      const blob = await response.blob();
+      console.log(`[Download] Image data fetched as blob (${(blob.size / 1024).toFixed(2)} KB)`);
+      
+      // Create a temporary Object URL from the blob
+      const objectUrl = URL.createObjectURL(blob);
+      console.log(`[Download] Created Object URL: ${objectUrl.substring(0, 100)}...`);
+
+      // Create a temporary link and trigger download using the Object URL
+      console.log(`[Download] Triggering download for Object URL with filename: ${filename}`);
       const link = document.createElement('a');
-      link.href = downloadUrl;
-      link.download = `action-figure-${figureId}.png`;
+      link.href = objectUrl;
+      link.download = filename; 
+      // link.target = '_blank'; // Remove target blank
+      link.rel = 'noopener noreferrer';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+
+      // Revoke the Object URL to free up memory
+      URL.revokeObjectURL(objectUrl);
+      console.log('[Download] Revoked Object URL.');
+      // --- End New Download Logic ---
+      
+      toast.success('Download started!', { id: `download-${figureId}` });
     } catch (error) {
-      console.error('Error downloading figure:', error);
-      toast.error('Failed to download figure');
+      console.error('[Download] Error downloading figure:', error);
+      toast.error(`Failed to download figure: ${error instanceof Error ? error.message : 'Unknown error'}`, { id: `download-${figureId}` });
     }
   };
 
@@ -166,7 +216,7 @@ export default function DashboardPage() {
           </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5">
           {figures.map((figure) => (
             <FigureCard
               key={figure.id}

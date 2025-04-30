@@ -1,35 +1,52 @@
 import Link from "next/link";
+import Image from 'next/image';
 import { ArrowRight, Gift, Image as ImageIcon, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { FigureShowcaseCarousel } from '@/components/FigureShowcaseCarousel';
 
 export default function Home() {
   return (
-    <div className="flex flex-col min-h-screen">
-      {/* Hero Section */}
+    <div className="flex flex-col min-h-screen font-sans">
+      {/* Hero Section - Now includes text, image, and carousel */}
       <header className="relative bg-gradient-to-b from-neutral-50 to-neutral-100 dark:from-neutral-950 dark:to-neutral-900">
-        <div className="container mx-auto px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
-          <div className="max-w-2xl">
-            <h1 className="text-4xl font-bold tracking-tight text-neutral-900 dark:text-neutral-50 sm:text-5xl">
-              Turn your face into a{" "}
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600">
-                boxed action figure
-              </span>
-            </h1>
-            <p className="mt-6 text-lg text-neutral-600 dark:text-neutral-300 max-w-xl">
-              Create a high-resolution action figure mock-up from your selfie in seconds. Ready for social media, mugs, t-shirts, and more.
-            </p>
-            <div className="mt-8 flex flex-col sm:flex-row gap-3">
-              <Button asChild size="lg" className="gap-2">
-                <Link href="/dashboard/generate">
-                  Try it now
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </Button>
-              <Button asChild variant="outline" size="lg">
-                <Link href="/auth/sign-in">
-                  Sign in
-                </Link>
-              </Button>
+        <div className="container mx-auto px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-20">
+          <div className="flex flex-col items-center gap-8 lg:gap-10">
+            <div className="w-full max-w-2xl text-center">
+              <h1 className="text-3xl font-poppins font-bold tracking-tight text-neutral-900 dark:text-neutral-50 sm:text-4xl lg:text-5xl">
+                Turn your face into a{" "}
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600">
+                  boxed action figure
+                </span>
+              </h1>
+              <p className="mt-6 text-lg text-neutral-600 dark:text-neutral-300 max-w-xl mx-auto">
+                Create a high-resolution action figure mock-up from your selfie in seconds. Ready for social media, mugs, t-shirts, and more.
+              </p>
+              <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
+                <Button asChild size="lg" className="gap-2">
+                  <Link href="/dashboard/generate">
+                    Try it now
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" size="lg">
+                  <Link href="/auth/sign-in">
+                    Sign in
+                  </Link>
+                </Button>
+              </div>
+            </div>
+            <div className="w-full max-w-sm mt-4">
+              <Image 
+                src="/images/hero-graphic.png"
+                alt="Action figure box mock-up illustration"
+                width={450}
+                height={525}
+                priority
+                className="rounded-lg shadow-xl mx-auto"
+              />
+            </div>
+            <div className="w-full mt-8 lg:mt-10">
+              <FigureShowcaseCarousel />
             </div>
           </div>
         </div>
@@ -38,14 +55,14 @@ export default function Home() {
       {/* Features */}
       <section className="py-16 bg-white dark:bg-neutral-950">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-center mb-16">How it works</h2>
+          <h2 className="text-3xl font-poppins font-bold text-center mb-16">How it works</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
             <div className="flex flex-col items-center text-center">
               <div className="h-16 w-16 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center mb-4">
                 <ImageIcon className="h-8 w-8 text-blue-600 dark:text-blue-300" />
               </div>
-              <h3 className="text-xl font-medium mb-2">1. Upload your photo</h3>
+              <h3 className="text-xl font-poppins font-semibold mb-2">1. Upload your photo</h3>
               <p className="text-neutral-600 dark:text-neutral-400">
                 Just upload a clear face photo and customize your figure details.
               </p>
@@ -55,7 +72,7 @@ export default function Home() {
               <div className="h-16 w-16 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center mb-4">
                 <Gift className="h-8 w-8 text-purple-600 dark:text-purple-300" />
               </div>
-              <h3 className="text-xl font-medium mb-2">2. Our AI works magic</h3>
+              <h3 className="text-xl font-poppins font-semibold mb-2">2. Our AI works magic</h3>
               <p className="text-neutral-600 dark:text-neutral-400">
                 Our advanced AI transforms your photo into a professional action figure.
               </p>
@@ -65,7 +82,7 @@ export default function Home() {
               <div className="h-16 w-16 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center mb-4">
                 <Shield className="h-8 w-8 text-green-600 dark:text-green-300" />
               </div>
-              <h3 className="text-xl font-medium mb-2">3. Get your figure</h3>
+              <h3 className="text-xl font-poppins font-semibold mb-2">3. Get your figure</h3>
               <p className="text-neutral-600 dark:text-neutral-400">
                 Download your high-resolution action figure image for any use.
               </p>
@@ -77,11 +94,11 @@ export default function Home() {
       {/* Pricing Section */}
       <section className="py-16 bg-neutral-50 dark:bg-neutral-900">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-center mb-16">Simple Pricing</h2>
+          <h2 className="text-3xl font-poppins font-bold text-center mb-16">Simple Pricing</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto">
             <div className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl p-8 shadow-sm">
-              <h3 className="text-xl font-bold mb-2">Single</h3>
+              <h3 className="text-xl font-poppins font-bold mb-2">Single</h3>
               <p className="text-neutral-600 dark:text-neutral-400 mb-4">Perfect for a quick gift or social media post</p>
               <p className="text-4xl font-bold mb-6">$1.99</p>
               <ul className="space-y-2 mb-8">
@@ -100,7 +117,7 @@ export default function Home() {
                     </svg>
                   </div>
                   <span>High-resolution PNG file</span>
-          </li>
+                </li>
               </ul>
               <Button asChild className="w-full">
                 <Link href="/dashboard/generate">Buy Single</Link>
@@ -109,7 +126,7 @@ export default function Home() {
             
             <div className="bg-white dark:bg-neutral-800 border-2 border-blue-500 dark:border-blue-400 rounded-xl p-8 shadow-md relative">
               <div className="absolute -top-3 right-4 bg-blue-500 text-white px-3 py-1 rounded-full text-sm font-medium">Popular</div>
-              <h3 className="text-xl font-bold mb-2">Group</h3>
+              <h3 className="text-xl font-poppins font-bold mb-2">Group</h3>
               <p className="text-neutral-600 dark:text-neutral-400 mb-4">Perfect for family or multiple tries</p>
               <p className="text-4xl font-bold mb-6">$6.99</p>
               <ul className="space-y-2 mb-8">

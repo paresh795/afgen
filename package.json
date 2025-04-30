@@ -20,6 +20,8 @@
     "@upstash/qstash": "^2.7.23",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "embla-carousel-autoplay": "^8.6.0",
+    "embla-carousel-react": "^8.6.0",
     "lucide-react": "^0.503.0",
     "next": "14.2.28",
     "next-secure-headers": "^2.2.0",
