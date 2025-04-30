@@ -39,7 +39,7 @@ export async function uploadFileAdmin({
 }) {
   try {
     // Create the user's directory if it doesn't exist
-    const { data: dirData, error: dirError } = await supabaseAdmin.storage
+    const { error: dirError } = await supabaseAdmin.storage
       .from(bucketName)
       .list(userId);
     

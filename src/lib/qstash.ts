@@ -13,7 +13,7 @@ const qstashClient = new Client({
  * @param figureId The ID of the figure record in the database
  * @returns The message ID from QStash
  */
-export async function enqueueFigureGeneration(payload: any, figureId: string) {
+export async function enqueueFigureGeneration(payload: Record<string, unknown>, figureId: string) {
   if (!process.env.QSTASH_TOKEN) {
     throw new Error('QStash token not configured');
   }

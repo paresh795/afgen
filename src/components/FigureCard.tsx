@@ -20,7 +20,7 @@ interface FigureCardProps {
 }
 
 export function FigureCard({
-  id,
+  // id,
   name,
   tagline,
   imageUrl,

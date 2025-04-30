@@ -30,8 +30,8 @@ export async function POST(request: NextRequest) {
       try {
         // Use the client-side helper for user lookup if using token from client
         const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
-        const { data: { user }/*, error // error is unused */ } = await supabase.auth.getUser(token);
-        if (/* !error && */ user) { // Comment out error check as it's unused
+        const { data: { user } } = await supabase.auth.getUser(token);
+        if (user) {
           userId = user.id;
           userEmail = user.email || null;
           console.log(`Auth success via Bearer token: ${userId}`);
@@ -137,10 +137,10 @@ export async function POST(request: NextRequest) {
       url: checkoutSession.url,
     });
     
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error creating checkout session:', error);
     return NextResponse.json(
-      { error: `Failed to create checkout session: ${error.message}` },
+      { error: `Failed to create checkout session: ${error instanceof Error ? error.message : 'Unknown error'}` },
       { status: 500 }
     );
   }

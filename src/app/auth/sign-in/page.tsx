@@ -57,8 +57,9 @@ export default function SignInPage() {
       
       // Reliable redirect after successful sign-in
       window.location.href = redirectUrl;
-    } catch (error: any) {
-      setError(error.message || 'Failed to sign in');
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown sign-in error';
+      setError(message);
       toast.error('Failed to sign in');
     } finally {
       setIsLoading(false);
@@ -85,8 +86,9 @@ export default function SignInPage() {
       if (error) {
         throw error;
       }
-    } catch (error: any) {
-      setError(error.message || 'Failed to sign in with Google');
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown Google sign-in error';
+      setError(message);
       toast.error('Failed to sign in with Google');
       setIsLoading(false);
     }

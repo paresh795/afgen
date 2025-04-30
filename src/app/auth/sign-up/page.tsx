@@ -50,8 +50,9 @@ export default function SignUpPage() {
 
       toast.success('Account created successfully! Please check your email to verify your account.');
       router.push('/auth/verification');
-    } catch (error: any) {
-      setError(error.message || 'Failed to create account');
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown sign-up error';
+      setError(message);
       toast.error('Failed to create account');
     } finally {
       setIsLoading(false);
@@ -73,8 +74,9 @@ export default function SignUpPage() {
       if (error) {
         throw error;
       }
-    } catch (error: any) {
-      setError(error.message || 'Failed to sign up with Google');
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown Google sign-up error';
+      setError(message);
       toast.error('Failed to sign up with Google');
       setIsLoading(false);
     }

@@ -170,11 +170,12 @@ export default function GeneratePage() {
       window.dispatchEvent(new CustomEvent('refreshCredits'));
       setTimeout(() => router.push('/dashboard'), 1500);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Enqueue Error:', error);
-      toast.error(`Error: ${error.message}`, { id: 'enqueue-toast' });
+      const message = error instanceof Error ? error.message : 'Unknown enqueue error';
+      toast.error(`Error: ${message}`, { id: 'enqueue-toast' });
       // Optionally, set a general error state for the form
-      setErrors([{ path: ['form'], message: error.message, code: 'custom' }]);
+      setErrors([{ path: ['form'], message: message, code: 'custom' }]);
     } finally {
       setIsEnqueuing(false);
     }

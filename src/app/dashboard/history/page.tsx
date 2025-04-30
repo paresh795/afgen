@@ -48,10 +48,11 @@ export default function BillingHistoryPage() {
         console.log(`[BillingHistoryPage] Fetched ${fetchedPayments.length} payments (total count: ${count})`);
         setPayments(fetchedPayments);
 
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('[BillingHistoryPage] Error loading payment history:', err);
-        setError(err.message || 'Could not load billing history.');
-        toast.error(err.message || 'Could not load billing history.');
+        const message = err instanceof Error ? err.message : 'Could not load billing history.';
+        setError(message);
+        toast.error(message);
       } finally {
         setIsLoading(false);
       }

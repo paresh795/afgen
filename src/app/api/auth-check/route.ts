@@ -29,8 +29,8 @@ export async function GET(request: NextRequest) {
           headerAuth.userId = user.id;
           headerAuth.message = 'Authenticated via header';
         }
-      } catch (e: any) {
-        headerAuth.message = e.message;
+      } catch (e: unknown) {
+        headerAuth.message = e instanceof Error ? e.message : 'Unknown header auth error';
       }
     }
     
@@ -57,8 +57,8 @@ export async function GET(request: NextRequest) {
           rawCookieAuth.userId = user.id;
           rawCookieAuth.message = 'Authenticated via raw cookie';
         }
-      } catch (e: any) {
-        rawCookieAuth.message = e.message;
+      } catch (e: unknown) {
+        rawCookieAuth.message = e instanceof Error ? e.message : 'Unknown raw cookie auth error';
       }
     }
     
@@ -86,11 +86,11 @@ export async function GET(request: NextRequest) {
       serverTimeUTC: new Date().toISOString()
     });
     
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Auth check error:', error);
     return NextResponse.json({
       authenticated: false,
-      error: error.message,
+      error: error instanceof Error ? error.message : 'Unknown server error',
       serverTimeUTC: new Date().toISOString()
     }, { status: 500 });
   }

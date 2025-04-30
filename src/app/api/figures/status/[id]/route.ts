@@ -55,9 +55,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       }
     });
     
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[Status] Error fetching figure status:', error);
-    return NextResponse.json({ error: `Error fetching status: ${error.message}` }, { status: 500 });
+    return NextResponse.json({ error: `Error fetching status: ${error instanceof Error ? error.message : 'Unknown error'}` }, { status: 500 });
   }
 }
 

@@ -105,6 +105,23 @@ export async function POST(request: NextRequest) {
       });
     }
     
+    // Validate required fields from the parsed body
+    if (!body.imageUrl || !body.name || !body.tagline) {
+      console.error('[Worker] Missing required fields (imageUrl, name, tagline) in job payload');
+      // Update figure status to error
+      await supabaseAdmin
+        .from('figures')
+        .update({
+          status: 'error',
+          prompt_json: {
+            ...figure.prompt_json,
+            error: 'Worker error: Missing required fields in job payload',
+          }
+        })
+        .eq('id', figureId);
+      return NextResponse.json({ error: 'Missing required fields in job payload' }, { status: 400 });
+    }
+    
     // Update the figure status to processing (this is an intermediate status we use internally)
     const { error: updateError } = await supabaseAdmin
       .from('figures')

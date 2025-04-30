@@ -101,7 +101,7 @@ export default function DashboardLayout({
         console.log('[DashboardLayout] Auth state check result:', { user: authData?.user?.id, email: authData?.user?.email, error: authError });
 
         // Check if we have an active user session
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        const { data: { session } } = await supabase.auth.getSession();
         
         // Use a grace period before redirecting to handle race conditions
         // where the session might be momentarily missing due to refreshing
