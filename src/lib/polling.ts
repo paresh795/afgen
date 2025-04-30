@@ -70,19 +70,25 @@ export async function poll<T>({
  * Specialized polling function for checking figure generation status
  */
 export async function pollFigureStatus(figureId: string, onUpdate?: (status: any) => void) {
-  return poll({
-    checkFn: async () => {
-      const res = await fetch(`/api/figures/status/${figureId}`);
-      if (!res.ok) {
-        throw new Error(`Failed to fetch figure status: ${res.statusText}`);
-      }
-      return res.json();
-    },
-    shouldContinueFn: (result) => {
-      return result.figure?.status === 'queued'; // Keep polling while queued
-    },
-    interval: 3000, // Check every 3 seconds
-    timeout: 600000, // 10 minute timeout
-    onPoll: onUpdate
-  });
+  try {
+    return poll({
+      checkFn: async () => {
+        const res = await fetch(`/api/figures/status/${figureId}`);
+        if (!res.ok) {
+          throw new Error(`Failed to fetch figure status: ${res.statusText}`);
+        }
+        return res.json();
+      },
+      shouldContinueFn: (result) => {
+        return result.figure?.status === 'queued'; // Keep polling while queued
+      },
+      interval: 3000, // Check every 3 seconds
+      timeout: 600000, // 10 minute timeout
+      onPoll: onUpdate
+    });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Polling check failed';
+    console.error(message, error);
+    throw error;
+  }
 } 

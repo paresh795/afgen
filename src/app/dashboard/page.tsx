@@ -6,7 +6,6 @@ import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { FigureCard, FigureStatus } from '@/components/FigureCard';
 import { supabase, getUserFigures, getSignedUrl } from '@/lib/supabase';
-import { pollFigureStatus } from '@/lib/polling';
 import { toast } from 'react-hot-toast';
 
 // Define the Figure type based on our database schema
@@ -18,6 +17,14 @@ interface Figure {
   image_url: string | null;
   cost_cents: number;
   created_at: string;
+}
+
+// Define a simple type for prompt_json to avoid 'any'
+interface FigurePrompt { 
+  name?: string;
+  tagline?: string;
+  error?: string;
+  // Add other expected fields if known
 }
 
 export default function DashboardPage() {
@@ -41,11 +48,12 @@ export default function DashboardPage() {
         }
 
         console.log(`[DashboardPage] User authenticated (${userData.user.id}), fetching figures...`);
-        const { figures, count } = await getUserFigures(userData.user.id);
+        const { figures/*, count*/ } = await getUserFigures(userData.user.id);
         setFigures(figures);
-      } catch (error) {
+      } catch (error: unknown) {
         console.error('Error loading figures:', error);
-        toast.error('Failed to load your figures');
+        const message = error instanceof Error ? error.message : 'Unknown error';
+        toast.error(`Failed to load your figures: ${message}`);
       } finally {
         setIsLoading(false);
       }
@@ -217,18 +225,22 @@ export default function DashboardPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5">
-          {figures.map((figure) => (
-            <FigureCard
-              key={figure.id}
-              id={figure.id}
-              name={figure.prompt_json?.name || 'Action Figure'}
-              tagline={figure.prompt_json?.tagline || 'No tagline'}
-              imageUrl={figure.image_url || undefined}
-              status={figure.status}
-              createdAt={new Date(figure.created_at)}
-              onDownload={() => figure.image_url && handleDownload(figure.id, figure.image_url)}
-            />
-          ))}
+          {figures.map((figure) => {
+            // Ensure prompt_json is treated as our defined type or an empty object
+            const promptData: FigurePrompt = (figure.prompt_json as FigurePrompt) || {}; 
+            return (
+              <FigureCard
+                key={figure.id}
+                id={figure.id}
+                name={promptData.name || 'Action Figure'}
+                tagline={promptData.tagline || 'No tagline'}
+                imageUrl={figure.image_url || undefined}
+                status={figure.status}
+                createdAt={new Date(figure.created_at)}
+                onDownload={() => figure.image_url && handleDownload(figure.id, figure.image_url)}
+              />
+            );
+          })}
         </div>
       )}
     </div>

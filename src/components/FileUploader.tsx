@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Upload, X, AlertCircle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { supabase } from '@/lib/supabase';
+import Image from 'next/image';
 
 interface FileUploaderProps {
   onFileSelected: (file: File, uploadedUrl?: string) => void;
@@ -208,7 +209,7 @@ export function FileUploader({
         console.log('Sending XHR request with credentials');
         xhr.send(formData);
       });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Upload error:', error);
       let errorMessage = 'File upload failed';
       
@@ -364,11 +365,13 @@ export function FileUploader({
               <X className="h-4 w-4" />
             </Button>
           </div>
-          <div className="overflow-hidden rounded-lg">
-            <img
+          <div className="overflow-hidden rounded-lg relative aspect-square w-full">
+            <Image
               src={preview}
               alt="Preview"
-              className="h-auto w-full object-cover"
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             />
           </div>
           {error && (

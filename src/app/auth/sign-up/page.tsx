@@ -36,7 +36,7 @@ export default function SignUpPage() {
     }
 
     try {
-      const { data, error } = await supabase.auth.signUp({
+      const { /* data, */ error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -63,7 +63,7 @@ export default function SignUpPage() {
     setError(null);
 
     try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const { /* data, */ error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,

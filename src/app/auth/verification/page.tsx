@@ -20,12 +20,12 @@ export default function VerificationPage() {
 
         <h1 className="text-2xl font-bold tracking-tight">Check your email</h1>
         <p className="mt-2 text-neutral-600 dark:text-neutral-400">
-          We've sent you a verification link to complete your registration.
+          We&apos;ve sent you a verification link to complete your registration.
         </p>
         
         <div className="mt-8 rounded-lg border border-neutral-200 bg-neutral-50 p-4 text-sm dark:border-neutral-800 dark:bg-neutral-900">
           <p>
-            Can't find the email? Check your spam folder or{" "}
+            Can&apos;t find the email? Check your spam folder or{" "}
             <Link href="/auth/sign-up" className="text-blue-600 hover:text-blue-500">
               try again with a different email
             </Link>

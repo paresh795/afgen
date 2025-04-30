@@ -3,7 +3,6 @@ import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 import { supabaseAdmin, ensureUserCredits } from '@/lib/supabase-server';
 import { enqueueFigureGeneration } from '@/lib/qstash';
-import { getUserCredits } from '@/lib/supabase';
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,7 +21,7 @@ export async function POST(request: NextRequest) {
     let userEmail: string | undefined;
     
     // First attempt: Try cookie authentication (existing method)
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    const { data: { session }/*, error: sessionError */ } = await supabase.auth.getSession();
     
     if (session?.user) {
       // Cookie auth worked! Use this user ID

@@ -5,7 +5,6 @@ import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Download } from 'lucide-react';
 
 export type FigureStatus = 'queued' | 'done' | 'error';
 
@@ -72,7 +71,6 @@ export function FigureCard({
             onClick={onDownload}
             className="gap-1"
           >
-            <Download className="h-4 w-4" />
             <span>Download</span>
           </Button>
         )}

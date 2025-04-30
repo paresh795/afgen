@@ -1,5 +1,4 @@
 import { Client } from '@upstash/qstash';
-import { verifySignature } from '@upstash/qstash/dist/nextjs';
 
 // Initialize QStash client
 const qstashClient = new Client({
@@ -51,28 +50,6 @@ export async function enqueueFigureGeneration(payload: any, figureId: string) {
     console.error('[QStash] Failed to enqueue job:', error);
     throw error;
   }
-}
-
-/**
- * Verifies the signature of a QStash webhook request
- * This is a wrapper around the QStash verifySignature function
- * 
- * @param request The incoming request
- * @param body The request body
- * @returns A promise resolving to the verified body
- */
-export const verifyQStashSignature = verifySignature;
-
-/**
- * Custom middleware wrapper for verifying QStash signatures
- * 
- * @param handler The API route handler
- * @returns A handler that verifies the signature before executing the original handler
- */
-export function withQStashVerification(handler: Function) {
-  return verifySignature(async (req, res) => {
-    return handler(req, res);
-  });
 }
 
 export default qstashClient; 

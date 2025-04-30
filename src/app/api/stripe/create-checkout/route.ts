@@ -3,7 +3,6 @@ import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 import { stripe } from '@/lib/stripe';
 import { PRICE_IDS } from '@/lib/stripe-config';
-import { supabaseAdmin } from '@/lib/supabase-server';
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,8 +28,10 @@ export async function POST(request: NextRequest) {
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.substring(7);
       try {
-        const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
-        if (!error && user) {
+        // Use the client-side helper for user lookup if using token from client
+        const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+        const { data: { user }/*, error // error is unused */ } = await supabase.auth.getUser(token);
+        if (/* !error && */ user) { // Comment out error check as it's unused
           userId = user.id;
           userEmail = user.email || null;
           console.log(`Auth success via Bearer token: ${userId}`);

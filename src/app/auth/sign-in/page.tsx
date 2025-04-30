@@ -43,7 +43,7 @@ export default function SignInPage() {
     setError(null);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { /* data, */ error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
@@ -75,7 +75,7 @@ export default function SignInPage() {
         localStorage.setItem('authRedirectUrl', redirectUrl);
       }
       
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const { /* data, */ error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
@@ -199,7 +199,7 @@ export default function SignInPage() {
           </div>
 
           <div className="mt-6 text-center text-sm text-neutral-600 dark:text-neutral-400">
-            Don't have an account?{' '}
+            Don&apos;t have an account?{' '}
             <Link href="/auth/sign-up" className="text-blue-600 hover:text-blue-500">
               Sign up
             </Link>

@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { User, ImagePlus, History, CreditCard, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase, getUser, getUserCredits } from '@/lib/supabase';
@@ -13,7 +12,6 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const router = useRouter();
   const [userData, setUserData] = useState<{
     name: string;
     email: string | undefined;
@@ -23,9 +21,6 @@ export default function DashboardLayout({
     email: undefined,
     credits: 0,
   });
-  const [isLoading, setIsLoading] = useState(true);
-  const [authChecked, setAuthChecked] = useState(false);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   // Function to refresh credits
   const refreshCredits = async () => {
@@ -81,7 +76,6 @@ export default function DashboardLayout({
   useEffect(() => {
     const intervalId = setInterval(() => {
       refreshCredits();
-      setRefreshTrigger(prev => prev + 1);
     }, 15000);
     
     // Listen for custom refresh credits event
@@ -102,8 +96,6 @@ export default function DashboardLayout({
     // Function to load user data
     async function loadUserData() {
       try {
-        setIsLoading(true);
-        
         console.log('[DashboardLayout] Checking auth state before fetching credits...');
         const { data: authData, error: authError } = await supabase.auth.getUser();
         console.log('[DashboardLayout] Auth state check result:', { user: authData?.user?.id, email: authData?.user?.email, error: authError });
@@ -123,7 +115,7 @@ export default function DashboardLayout({
             if (!retrySession) {
               console.log("Still no session found after retry - redirecting to sign in");
               // Only redirect if we're still mounted
-              if (authChecked) {
+              if (true) {
                 window.location.href = `/auth/sign-in?redirectUrl=${window.location.pathname}`;
               }
             } else {
@@ -136,7 +128,6 @@ export default function DashboardLayout({
                 email: user.email,
                 credits,
               });
-              setIsLoading(false);
             }
           }, 500); // Short delay to allow for session refresh
           
@@ -156,9 +147,6 @@ export default function DashboardLayout({
       } catch (error) {
         console.error('Error loading user data:', error);
         toast.error('Failed to load user data');
-      } finally {
-        setIsLoading(false);
-        setAuthChecked(true);
       }
     }
 
@@ -178,7 +166,6 @@ export default function DashboardLayout({
             email: user.email,
             credits,
           });
-          setIsLoading(false);
         }
       }
     );

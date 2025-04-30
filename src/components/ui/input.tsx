@@ -5,7 +5,10 @@ import { cn } from "@/lib/utils"
 export interface InputProps
   extends React.InputHTMLAttributes<HTMLInputElement> {}
 
-const Input = React.forwardRef<HTMLInputElement, InputProps>(
+// Convert interface to type alias
+type InputPropsAlias = React.InputHTMLAttributes<HTMLInputElement> & {};
+
+const Input = React.forwardRef<HTMLInputElement, InputPropsAlias>(
   ({ className, type, ...props }, ref) => {
     return (
       <input

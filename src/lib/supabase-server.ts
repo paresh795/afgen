@@ -52,7 +52,7 @@ export async function uploadFileAdmin({
 
     // Upload file using admin privileges
     console.log(`Storage admin: Uploading file to ${bucketName}/${filePath}`);
-    const { data, error } = await supabaseAdmin.storage
+    const { error } = await supabaseAdmin.storage
       .from(bucketName)
       .upload(filePath, file, {
         cacheControl: '3600',

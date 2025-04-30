@@ -6,13 +6,10 @@ import { toast } from 'react-hot-toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FileUploader } from '@/components/FileUploader';
 import { supabase } from '@/lib/supabase';
 import { styles } from '@/lib/config/styles';
-import { backgrounds } from '@/lib/config/backgrounds';
-import { themes } from '@/lib/config/themes';
 import { AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
 import { z } from 'zod';
 
@@ -54,8 +51,6 @@ export default function GeneratePage() {
     imageUrl: '',
     // size: removed from user-editable state
   });
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-  const [isUploading, setIsUploading] = useState(false); // Track upload status from FileUploader if needed
   const [isEnqueuing, setIsEnqueuing] = useState(false);
   const [errors, setErrors] = useState<z.ZodIssue[]>([]);
   const [currentCredits, setCurrentCredits] = useState<number | null>(null);
@@ -93,7 +88,6 @@ export default function GeneratePage() {
   const handleFileUpload = async (file: File, uploadedUrl?: string) => {
     if (uploadedUrl) {
       setFormValues(prev => ({ ...prev, imageUrl: uploadedUrl }));
-      setUploadedFile(file);
       setErrors(prev => prev.filter(err => err.path[0] !== 'imageUrl')); // Clear image URL error
       console.log('Image uploaded:', uploadedUrl);
     } else {
@@ -286,7 +280,7 @@ export default function GeneratePage() {
       <div className="flex justify-end">
         <Button
           onClick={handleSubmit}
-          disabled={isEnqueuing || isUploading || isLoadingCredits || currentCredits === null || currentCredits < 1}
+          disabled={isEnqueuing || isLoadingCredits || currentCredits === null || currentCredits < 1}
           className="gap-2"
         >
           {isEnqueuing ? (

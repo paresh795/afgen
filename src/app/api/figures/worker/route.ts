@@ -47,7 +47,7 @@ async function verifyAndParse(request: Request): Promise<any> {
           // url is optional but can add robustness
           // url: request.url 
       });
-  } catch (error) {
+  } catch (error: unknown) {
       console.error('[QStash] Error during signature verification:', error);
       throw new Error('Signature verification process failed');
   }
@@ -195,7 +195,7 @@ export async function POST(request: NextRequest) {
       imageUrl: generationResult.imageUrl
     });
     
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[Worker] Unexpected error:', error);
     
     // Try to update the figure status to error if we have a figure ID
@@ -206,7 +206,7 @@ export async function POST(request: NextRequest) {
           .update({
             status: 'error',
             prompt_json: {
-              error: `Worker error: ${error.message}`,
+              error: `Worker error: ${error instanceof Error ? error.message : 'Unknown error'}`,
               processingCompletedAt: new Date().toISOString()
             }
           })
@@ -216,7 +216,9 @@ export async function POST(request: NextRequest) {
       }
     }
     
-    return NextResponse.json({ error: `Worker error: ${error.message}` }, { status: 500 });
+    // Apply pattern
+    const message = error instanceof Error ? error.message : 'Unknown worker error'; 
+    return NextResponse.json({ error: `Worker error: ${message}` }, { status: 500 });
   }
 }
 

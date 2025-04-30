@@ -94,7 +94,7 @@ export default function BillingHistoryPage() {
         <div className="rounded-lg border border-dashed border-neutral-300 bg-neutral-50 p-12 text-center dark:border-neutral-700 dark:bg-neutral-900">
           <h3 className="mb-2 text-lg font-medium">No billing history</h3>
           <p className="mb-6 text-neutral-600 dark:text-neutral-400">
-            You haven't made any purchases yet.
+            You haven&apos;t made any purchases yet.
           </p>
           <Button asChild>
             <Link href="/dashboard/buy">Buy Your First Credits</Link>
