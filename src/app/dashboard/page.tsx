@@ -12,7 +12,7 @@ import { toast } from 'react-hot-toast';
 interface Figure {
   id: string;
   user_id: string;
-  prompt_json: any;
+  prompt_json: FigurePrompt | null;
   status: FigureStatus;
   image_url: string | null;
   cost_cents: number;

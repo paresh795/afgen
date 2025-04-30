@@ -5,7 +5,7 @@ import { headers } from 'next/headers';
 import { Receiver } from '@upstash/qstash';
 
 // QStash signature verification wrapper for App Router
-async function verifyAndParse(request: Request): Promise<any> {
+async function verifyAndParse(request: Request): Promise<unknown> {
   const signature = headers().get('upstash-signature') || '';
   const currentSigningKey = process.env.QSTASH_CURRENT_SIGNING_KEY;
   const nextSigningKey = process.env.QSTASH_NEXT_SIGNING_KEY;
@@ -26,7 +26,8 @@ async function verifyAndParse(request: Request): Promise<any> {
       // Allow bypass only in non-production for easier testing, BUT parse body
       try {
         return JSON.parse(bodyText);
-      } catch (e) {
+      } catch (parseError) {
+        console.error('Unsigned parse error:', parseError);
         throw new Error('Invalid JSON body in unsigned request');
       }
     }
@@ -61,9 +62,21 @@ async function verifyAndParse(request: Request): Promise<any> {
   // If valid, parse and return the body
   try {
       return JSON.parse(bodyText);
-  } catch (e) {
+  } catch (parseError) {
+      console.error('Verified parse error:', parseError);
       throw new Error('Invalid JSON body after verification');
   }
+}
+
+// Define expected payload structure
+interface QstashJobPayload {
+  figureId?: string;
+  imageUrl?: string;
+  name?: string;
+  tagline?: string;
+  style?: string;
+  accessories?: string[];
+  size?: string;
 }
 
 export async function POST(request: NextRequest) {
@@ -73,7 +86,7 @@ export async function POST(request: NextRequest) {
   
   try {
     // Verify signature and parse the request body using the helper
-    const body = await verifyAndParse(request.clone()); // Clone request as body can be read only once
+    const body = await verifyAndParse(request.clone()) as QstashJobPayload; // Cast
     
     // Extract figureId first for potential error handling
     figureId = body.figureId || null;
@@ -99,25 +112,15 @@ export async function POST(request: NextRequest) {
     
     if (figure.status !== 'queued') {
       console.log(`[Worker] Figure ${figureId} is already in ${figure.status} status, skipping`);
-      return NextResponse.json({ 
-        message: `Figure is already in ${figure.status} status`,
-        figureId 
-      });
+      return NextResponse.json({ message: `Figure is already in ${figure.status} status`, figureId });
     }
     
     // Validate required fields from the parsed body
     if (!body.imageUrl || !body.name || !body.tagline) {
       console.error('[Worker] Missing required fields (imageUrl, name, tagline) in job payload');
-      // Update figure status to error
       await supabaseAdmin
         .from('figures')
-        .update({
-          status: 'error',
-          prompt_json: {
-            ...figure.prompt_json,
-            error: 'Worker error: Missing required fields in job payload',
-          }
-        })
+        .update({ status: 'error', prompt_json: { ...figure.prompt_json, error: 'Worker error: Missing required fields' } })
         .eq('id', figureId);
       return NextResponse.json({ error: 'Missing required fields in job payload' }, { status: 400 });
     }

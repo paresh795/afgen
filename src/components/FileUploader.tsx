@@ -181,12 +181,11 @@ export function FileUploader({
           }
         };
         
--        xhr.onerror = function() {
-+        xhr.onerror = function(_event) { // Rename unused event variable
-           clearTimeout(timeoutId);
-           console.error('Network error during upload');
-           setError('Network error. Please check your connection and try again.');
-           reject(new Error('Network error during upload'));
+        xhr.onerror = function() {
+          clearTimeout(timeoutId);
+          console.error('Network error during upload');
+          setError('Network error. Please check your connection and try again.');
+          reject(new Error('Network error during upload'));
         };
         
         xhr.ontimeout = function() {

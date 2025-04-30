@@ -169,7 +169,7 @@ export async function POST(request: NextRequest) {
         qstashMessageId: messageId
       });
       
-    } catch (qstashError: any) {
+    } catch (qstashError: unknown) {
       console.error('[Enqueue] QStash error:', qstashError);
       
       // Update figure status to error
@@ -179,14 +179,14 @@ export async function POST(request: NextRequest) {
           status: 'error',
           prompt_json: {
             ...promptJson,
-            error: `Failed to enqueue job: ${qstashError.message}`
+            error: `Failed to enqueue job: ${qstashError instanceof Error ? qstashError.message : 'Unknown error'}`
           }
         })
         .eq('id', figure.id);
       
       return NextResponse.json({
         error: 'Failed to enqueue job to processing queue',
-        details: qstashError.message,
+        details: qstashError instanceof Error ? qstashError.message : 'Unknown error',
         figureId: figure.id
       }, { status: 500 });
     }

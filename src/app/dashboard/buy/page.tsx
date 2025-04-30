@@ -64,9 +64,10 @@ export default function BuyCreditsPage() {
       if (error) {
         throw error;
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Purchase Error:', error);
-      toast.error(`Error: ${error.message}`);
+      const message = error instanceof Error ? error.message : 'Unknown purchase error';
+      toast.error(`Error: ${message}`);
     } finally {
       setIsLoading(false);
       setLoadingPlanId(null);
