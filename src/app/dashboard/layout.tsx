@@ -94,28 +94,33 @@ export default function DashboardLayout({
   useEffect(() => {
     // Function to load user data
     async function loadUserData() {
-      console.log('[Layout] loadUserData: START');
+      console.log('[Layout] loadUserData: START'); 
       try {
         // Just get the user data, we don't need to log it here anymore
-        await supabase.auth.getUser(); 
+        // await supabase.auth.getUser(); // Let's rely on getSession first
 
         // Check if we have an active user session
         console.log('[Layout] loadUserData: Checking session...');
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
-        console.log('[Layout] loadUserData: getSession result:', { session: !!session, error: sessionError?.message });
+        // **** FOCUS LOG ****
+        console.log('[Layout] loadUserData: getSession Initial Result:', { 
+          hasSession: !!session, 
+          userId: session?.user?.id,
+          error: sessionError?.message 
+        }); 
 
         // Use a grace period before redirecting to handle race conditions
         // where the session might be momentarily missing due to refreshing
         if (!session) {
-          console.log('[Layout] loadUserData: No session initially, setting timeout.');
+          console.log('[Layout] loadUserData: No session initially, setting timeout.'); 
           setTimeout(async () => {
-            console.log('[Layout] loadUserData: Timeout check starting...');
+            console.log('[Layout] loadUserData: Timeout check starting...'); 
             const { data: { session: retrySession }, error: retrySessionError } = await supabase.auth.getSession();
-            console.log('[Layout] loadUserData: Timeout getSession result:', { session: !!retrySession, error: retrySessionError?.message });
+            console.log('[Layout] loadUserData: Timeout getSession result:', { session: !!retrySession, error: retrySessionError?.message }); 
             
             if (!retrySession) {
-              console.log('[Layout] loadUserData: Still no session after timeout, redirecting!');
+              console.log('[Layout] loadUserData: Still no session after timeout, redirecting!'); 
               // Only redirect if we're still mounted
               if (true) {
                 window.location.href = `/auth/sign-in?redirectUrl=${window.location.pathname}`;
@@ -123,37 +128,39 @@ export default function DashboardLayout({
             } else {
               // We found a session on retry
               const user = retrySession.user;
-              console.log(`[Layout] loadUserData: Session found on retry, user ID: ${user.id}. Fetching credits...`);
-              const credits = await getUserCredits(user.id);
-              console.log(`[Layout] loadUserData: Credits received after retry: ${credits}`);
+              console.log(`[Layout] loadUserData: Session found on retry, user ID: ${user.id}. TEMPORARILY SKIPPING credit fetch.`); // <<< MODIFIED LOG
+              // const credits = await getUserCredits(user.id); // <<< TEMP COMMENTED OUT
+              // console.log(`[Layout] loadUserData: Credits received after retry: ${credits}`);
               
+              // Temporarily set basic data without credits
               setUserData({
                 name: user.email?.split('@')[0] || 'User',
                 email: user.email,
-                credits,
+                credits: 0, // Default to 0 for now
               });
             }
           }, 500); // Short delay to allow for session refresh
           
-          return;
+          return; // Exit if no initial session
         }
         
         // We have a session, load user data
         const user = session.user;
-        console.log(`[Layout] loadUserData: Initial session valid, user ID: ${user.id}. Fetching credits...`);
-        const credits = await getUserCredits(user.id);
-        console.log(`[Layout] loadUserData: Credits received initially: ${credits}`);
+        console.log(`[Layout] loadUserData: Initial session valid, user ID: ${user.id}. TEMPORARILY SKIPPING credit fetch.`); // <<< MODIFIED LOG
+        // const credits = await getUserCredits(user.id); // <<< TEMP COMMENTED OUT
+        // console.log(`[Layout] loadUserData: Credits received initially: ${credits}`);
         
+        // Temporarily set basic data without credits
         setUserData({
           name: user.email?.split('@')[0] || 'User',
           email: user.email,
-          credits,
+          credits: 0, // Default to 0 for now
         });
       } catch (error) {
-        console.error('[Layout] Error loading user data:', error);
+        console.error('[Layout] Error loading user data:', error); 
         toast.error('Failed to load user data');
       }
-      console.log('[Layout] loadUserData: END');
+      console.log('[Layout] loadUserData: END'); 
     }
 
     loadUserData();
@@ -161,23 +168,32 @@ export default function DashboardLayout({
     // Set up an auth state change listener
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('[Layout] onAuthStateChange triggered:', { event, hasSession: !!session }); // <<< ADDED LOG
         if (event === 'SIGNED_OUT') {
+          console.log('[Layout] onAuthStateChange: SIGNED_OUT, redirecting.'); // <<< ADDED LOG
           window.location.href = '/auth/sign-in';
         } else if (event === 'SIGNED_IN' && session) {
+          console.log('[Layout] onAuthStateChange: SIGNED_IN, processing...'); // <<< ADDED LOG
           const user = session.user;
-          const credits = await getUserCredits(user.id);
+          // const credits = await getUserCredits(user.id); // <<< TEMP COMMENTED OUT (fetch might be too early here)
+          console.log(`[Layout] onAuthStateChange: SIGNED_IN User: ${user.id}`); // <<< ADDED LOG
           
           setUserData({
             name: user.email?.split('@')[0] || 'User',
             email: user.email,
-            credits,
+            credits: 0, // Default to 0 for now
           });
+        } else if (session) {
+            // Handle other events like USER_UPDATED if needed, maybe refresh?
+            console.log(`[Layout] onAuthStateChange: Received ${event}, refreshing credits...`);
+            refreshCredits(); // Refresh credits on other auth events if session exists
         }
       }
     );
     
     // Cleanup the listener
     return () => {
+      console.log('[Layout] Cleanup: Unsubscribing from onAuthStateChange.'); // <<< ADDED LOG
       authListener.subscription.unsubscribe();
     };
   }, []);

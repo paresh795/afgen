@@ -40,7 +40,11 @@ export default function DashboardPage() {
         // Get user data, we don't need to log the result here
         console.log('[Page] loadFigures: Getting user...');
         const { data: userData, error: userError } = await supabase.auth.getUser();
-        console.log('[Page] loadFigures: getUser result:', { userId: userData?.user?.id, error: userError?.message });
+        
+        console.log('[Page] loadFigures: getUser result:', { 
+          userId: userData?.user?.id, 
+          error: userError?.message 
+        });
         
         if (userError) {
           console.error('[Page] loadFigures: Error getting user:', userError);
@@ -53,10 +57,8 @@ export default function DashboardPage() {
           // Allow isLoading to be set to false in finally block
         } else {
           const userId = userData.user.id;
-          console.log(`[Page] loadFigures: User authenticated (${userId}), fetching figures...`);
-          const { figures, count } = await getUserFigures(userId);
-          console.log(`[Page] loadFigures: getUserFigures returned ${figures.length} figures (total: ${count})`);
-          setFigures(figures);
+          console.log(`[Page] loadFigures: User authenticated (${userId}), TEMPORARILY SKIPPING figure fetch.`);
+          setFigures([]);
         }
       } catch (error: unknown) {
         console.error('[Page] Error loading figures:', error);
@@ -72,6 +74,7 @@ export default function DashboardPage() {
     loadFigures();
     
     // Set up realtime subscription for figure updates
+    console.log('[Page] Setting up Realtime subscription...');
     const figuresSubscription = supabase
       .channel('public:figures')
       .on('postgres_changes', { 
