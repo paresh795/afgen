@@ -94,20 +94,28 @@ export default function DashboardLayout({
   useEffect(() => {
     // Function to load user data
     async function loadUserData() {
+      console.log('[Layout] loadUserData: START');
       try {
         // Just get the user data, we don't need to log it here anymore
         await supabase.auth.getUser(); 
 
         // Check if we have an active user session
-        const { data: { session } } = await supabase.auth.getSession();
+        console.log('[Layout] loadUserData: Checking session...');
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
+        console.log('[Layout] loadUserData: getSession result:', { session: !!session, error: sessionError?.message });
+
         // Use a grace period before redirecting to handle race conditions
         // where the session might be momentarily missing due to refreshing
         if (!session) {
+          console.log('[Layout] loadUserData: No session initially, setting timeout.');
           setTimeout(async () => {
-            const { data: { session: retrySession } } = await supabase.auth.getSession();
+            console.log('[Layout] loadUserData: Timeout check starting...');
+            const { data: { session: retrySession }, error: retrySessionError } = await supabase.auth.getSession();
+            console.log('[Layout] loadUserData: Timeout getSession result:', { session: !!retrySession, error: retrySessionError?.message });
             
             if (!retrySession) {
+              console.log('[Layout] loadUserData: Still no session after timeout, redirecting!');
               // Only redirect if we're still mounted
               if (true) {
                 window.location.href = `/auth/sign-in?redirectUrl=${window.location.pathname}`;
@@ -115,7 +123,9 @@ export default function DashboardLayout({
             } else {
               // We found a session on retry
               const user = retrySession.user;
+              console.log(`[Layout] loadUserData: Session found on retry, user ID: ${user.id}. Fetching credits...`);
               const credits = await getUserCredits(user.id);
+              console.log(`[Layout] loadUserData: Credits received after retry: ${credits}`);
               
               setUserData({
                 name: user.email?.split('@')[0] || 'User',
@@ -130,7 +140,9 @@ export default function DashboardLayout({
         
         // We have a session, load user data
         const user = session.user;
+        console.log(`[Layout] loadUserData: Initial session valid, user ID: ${user.id}. Fetching credits...`);
         const credits = await getUserCredits(user.id);
+        console.log(`[Layout] loadUserData: Credits received initially: ${credits}`);
         
         setUserData({
           name: user.email?.split('@')[0] || 'User',
@@ -138,9 +150,10 @@ export default function DashboardLayout({
           credits,
         });
       } catch (error) {
-        console.error('Error loading user data:', error);
+        console.error('[Layout] Error loading user data:', error);
         toast.error('Failed to load user data');
       }
+      console.log('[Layout] loadUserData: END');
     }
 
     loadUserData();

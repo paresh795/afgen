@@ -33,29 +33,40 @@ export default function DashboardPage() {
 
   useEffect(() => {
     async function loadFigures() {
+      console.log('[Page] loadFigures: START');
       try {
         setIsLoading(true);
 
         // Get user data, we don't need to log the result here
-        await supabase.auth.getUser();
-
-        const { data: userData } = await supabase.auth.getUser();
+        console.log('[Page] loadFigures: Getting user...');
+        const { data: userData, error: userError } = await supabase.auth.getUser();
+        console.log('[Page] loadFigures: getUser result:', { userId: userData?.user?.id, error: userError?.message });
+        
+        if (userError) {
+          console.error('[Page] loadFigures: Error getting user:', userError);
+          throw userError;
+        }
         
         if (!userData?.user?.id) {
-          // console.error('[DashboardPage] User not authenticated, cannot load figures.');
-          return;
+          console.log('[Page] loadFigures: User not authenticated, cannot load figures.');
+          // Don't return here, let it show the empty state or handle based on context
+          // Allow isLoading to be set to false in finally block
+        } else {
+          const userId = userData.user.id;
+          console.log(`[Page] loadFigures: User authenticated (${userId}), fetching figures...`);
+          const { figures, count } = await getUserFigures(userId);
+          console.log(`[Page] loadFigures: getUserFigures returned ${figures.length} figures (total: ${count})`);
+          setFigures(figures);
         }
-
-        // console.log(`[DashboardPage] User authenticated (${userData.user.id}), fetching figures...`);
-        const { figures/*, count*/ } = await getUserFigures(userData.user.id);
-        setFigures(figures);
       } catch (error: unknown) {
-        // console.error('Error loading figures:', error);
+        console.error('[Page] Error loading figures:', error);
         const message = error instanceof Error ? error.message : 'Unknown error';
         toast.error(`Failed to load your figures: ${message}`);
       } finally {
+        console.log('[Page] loadFigures: Setting isLoading to false.');
         setIsLoading(false);
       }
+      console.log('[Page] loadFigures: END');
     }
 
     loadFigures();
